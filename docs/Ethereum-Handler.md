@@ -31,7 +31,7 @@ ERC-20 tokens are not supported yet; only native coin transfers.
 | `mainnet` | 1 | ETH |
 | `bnb` | 56 | BNB |
 | `bnbTestnet` | 97 | tBNB |
-| `goerli` | 5 | ETH |
+| `goerli` | 5 | GoerliETH |
 | `infuraMainnet` | 1 | ETH (needs `INFURA_KEY`) |
 | `alchemyMainnet` | 1 | ETH (needs `ALCHEMY_KEY`) |
 
