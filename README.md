@@ -1,9 +1,9 @@
 <div style="display:flex;align-items:center;justify-content:space-between;gap:16px;border-bottom:1px solid rgba(127,127,127,0.3);padding-bottom:12px;margin-bottom:16px;">
-  <div style="min-width:0;">
-    <h1 id="wallet" style="border-bottom:none;margin:0 0 8px 0;padding:0;">.wallet</h1>
-    <p style="margin:0;opacity:0.75;"><em>Wallet handlers for <a href="https://neurons-me.github.io/.me/">.me</a>.</em></p>
-  </div>
-  <img src="https://res.cloudinary.com/dkwnxf6gm/image/upload/v1765902981/this.wallet_giyxtt.webp" alt="this.wallet" style="width:104px;max-width:28vw;height:auto;flex:0 0 auto;" />
+<div style="min-width:0;">
+<h1 id="wallet" style="border-bottom:none;margin:0 0 8px 0;padding:0;">.wallet</h1>
+<p style="margin:0;opacity:0.75;"><em>Wallet handlers for <a href="https://neurons-me.github.io/.me/">.me</a>.</em></p>
+</div>
+<img src="https://res.cloudinary.com/dkwnxf6gm/image/upload/v1765902981/this.wallet_giyxtt.webp" alt="this.wallet" style="width:104px;max-width:28vw;height:auto;flex:0 0 auto;" />
 </div>
 
 `this.wallet` creates and opens crypto wallets, selects a network, reads balances, sends the native coin and signs messages. Today it works with **Ethereum and EVM-compatible networks** only. **Bitcoin and Stellar are not implemented yet.**
