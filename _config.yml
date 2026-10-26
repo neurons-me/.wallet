@@ -1,0 +1,41 @@
+title: this.wallet
+description: Wallet handlers for .me. Ethereum and EVM chains implemented; Bitcoin and Stellar not implemented yet.
+url: https://neurons-me.github.io
+baseurl: "/.wallet"
+
+remote_theme: neurons-me/neurons-me
+
+plugins:
+  - jekyll-remote-theme
+
+markdown: kramdown
+kramdown:
+  input: GFM
+  parse_block_html: true
+  hard_wrap: false
+
+# Jekyll skips dot-folders by default; the repo itself is published at /.wallet/.
+exclude:
+  - wallet.npm/node_modules
+  - wallet.crate/target
+  - wallet.crate/src
+  - wallet.pip
+  - docs/notes
+  - docs/MarketNotes
+  - docs/WalletNotes
+  - node_modules
+  - "*/node_modules"
+  - vendor
+
+me_theme:
+  brand: this.wallet
+  favicon: "https://res.cloudinary.com/dkwnxf6gm/image/upload/v1765902981/this.wallet_giyxtt.webp"
+  nav:
+    - label: Home
+      url: https://neurons-me.github.io/
+    - label: Docs
+      relative_url: /docs/
+    - label: Github
+      url: https://github.com/neurons-me/.wallet
+    - label: All.This
+      url: https://neurons-me.github.io/all.this/
