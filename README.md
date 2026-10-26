@@ -1,4 +1,4 @@
-<img src="https://res.cloudinary.com/dkwnxf6gm/image/upload/v1765902981/this.wallet_giyxtt.webp" alt="this.wallet" width="144" />
+<img src="https://res.cloudinary.com/dkwnxf6gm/image/upload/v1765902981/this.wallet_giyxtt.webp" alt="this.wallet" width="128" align="right" />
 
 # .wallet
 > *Wallet handlers for [.me](https://neurons-me.github.io/.me/).*
