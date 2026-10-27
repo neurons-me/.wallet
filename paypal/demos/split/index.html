@@ -38,6 +38,9 @@
   <script src="https://cdn.jsdelivr.net/npm/react@18.3.1/umd/react.production.min.js" integrity="sha384-DGyLxAyjq0f9SPpVevD6IgztCFlnMF6oW/XQGmfe+IsZ8TqEiDrcHkMLKI6fiB/Z" crossorigin="anonymous"></script>
   <script src="https://cdn.jsdelivr.net/npm/react-dom@18.3.1/umd/react-dom.production.min.js" integrity="sha384-gTGxhz21lVGYNMcdJOyq01Edg0jhn/c22nsx0kyqP0TxaV5WVdsSH1fSDUf5YJj1" crossorigin="anonymous"></script>
   <script src="https://cdn.jsdelivr.net/npm/this.gui@4.2.1/dist/this.gui.umd.js" integrity="sha384-hMM5lKGHIJVSKMQgLKFJCTZNMwCQ7XHWcMHCiiTwDFzA0a2q4p0crD/NyA9Pg7wb" crossorigin="anonymous"></script>
+  <!-- The split model: a .me kernel (this.me@4.2.1, UMD global Me) and the rules in /.wallet/assets/split/split-me.js (window.SplitMe). -->
+  <script src="https://cdn.jsdelivr.net/npm/this.me@4.2.1/dist/me.umd.js" integrity="sha384-ElnWCZOb324gqFJ2M/Fxy4CZ6Si131WIbR54iYomzEbTloUDLfBzZ05qi1nZ7+4G" crossorigin="anonymous"></script>
+  <script src="/.wallet/assets/split/split-me.js?v=1"></script>
   <!-- Static page styles, off once .GUI has rendered (html.gui-on). -->
   <style>
     html:not(.gui-on) * { box-sizing: border-box; }
@@ -55,6 +58,8 @@
     html:not(.gui-on) main { max-width: 640px; margin: 0 auto; padding: 88px 20px 80px; }
     html:not(.gui-on) h1 { font-size: clamp(2.2rem, 6vw, 3.4rem); line-height: 1.05; letter-spacing: -.03em; font-weight: 800; margin: 0 0 12px; }
     html:not(.gui-on) .lead { color: #a1a1aa; margin: 0 0 32px; }
+    html:not(.gui-on) .planned-tag { color: #8b949e; font-size: .72rem; letter-spacing: .06em; text-transform: uppercase; margin: 32px 2px 8px; }
+    html:not(.gui-on) .needs-js { color: #8b949e; }
     html:not(.gui-on) .note { color: #8b949e; font-size: .8rem; margin: 14px 2px 0; }
     html:not(.gui-on) form { border: 1px solid #30363d; border-radius: 14px; background: #0b1114; padding: 16px; }
     html:not(.gui-on) textarea { display: block; width: 100%; min-height: 110px; border: 0; outline: 0; resize: vertical; background: transparent; color: inherit; font: inherit; font-size: 1.05rem; }
@@ -64,7 +69,7 @@
   </style>
 </head>
 <body>
-<div id="static-landing" data-layout="wallet-paypal">
+<div id="static-landing" data-layout="wallet-split">
   <nav class="topnav" aria-label="me path">
     <a class="logo" href="https://neurons-me.github.io/" title="neurons.me"><img src="https://res.cloudinary.com/dkwnxf6gm/image/upload/v1760629064/neurons.me_b50f6a.png" alt="neurons.me" width="28" height="28" /></a>
     <div class="mepath"><a href="https://neurons-me.github.io/.me/" title=".me">me://</a><a href="/.wallet/" title=".wallet">.wallet</a><a href="/.wallet/paypal/" title="PayPal">paypal</a><a href="/.wallet/paypal/demos/" title="Demos">demos</a><span class="here" aria-current="page">split</span></div>
@@ -75,20 +80,26 @@
   <main>
     <header>
       <h1>Who paid what?</h1>
-      <p class="lead">Say it or snap the receipt. You approve, PayPal settles.</p>
+      <p class="lead">Who paid, who was in. Balances and transfers update as you go.</p>
     </header>
-    <form data-wallet-entry onsubmit="return false">
-      <label for="wallet-who-paid-what" hidden>Who paid what</label>
-      <textarea id="wallet-who-paid-what" placeholder="Describe it in plain words"></textarea>
-      <div class="row">
-        <button type="button" data-wallet-photo aria-label="Add a receipt photo">Receipt photo</button>
-        <button type="submit" data-wallet-go disabled>Split</button>
-      </div>
-    </form>
+    <section data-split-app aria-label="Split">
+      <p class="needs-js">The split runs in the browser with JavaScript.</p>
+    </section>
+    <section data-planned>
+      <p class="planned-tag">Planned · Meta model</p>
+      <form data-wallet-entry onsubmit="return false">
+        <label for="wallet-who-paid-what" hidden>Describe in plain language</label>
+        <textarea id="wallet-who-paid-what" placeholder="Describe it in plain language" disabled></textarea>
+        <div class="row">
+          <button type="button" data-wallet-photo disabled aria-label="Add a receipt photo">Receipt photo</button>
+          <button type="submit" data-wallet-go disabled>Split</button>
+        </div>
+      </form>
+    </section>
     <p class="note">Paypal .me · a demo for the PayPal AI hackathon · in development. This page does not send anything yet.</p>
   </main>
 </div>
 <div id="root"></div>
-<script src="/.wallet/assets/wallet-gui.js?v=4" onerror="document.documentElement.classList.remove('gui-boot')"></script>
+<script src="/.wallet/assets/wallet-gui.js?v=5" onerror="document.documentElement.classList.remove('gui-boot')"></script>
 </body>
 </html>

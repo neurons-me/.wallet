@@ -32,11 +32,17 @@
       return { label: txt(f.querySelector("label")), placeholder: f.querySelector("textarea").getAttribute("placeholder") || "", photo: txt(f.querySelector("[data-wallet-photo]")),
         photoLabel: f.querySelector("[data-wallet-photo]").getAttribute("aria-label") || "", go: txt(f.querySelector("[data-wallet-go]")) };
     })() : null,
+    // /.wallet/paypal/demos/split/ (#static-landing[data-layout=wallet-split]): the split app, then the planned plain-language entry (disabled)
+    split: SRC.dataset.layout === "wallet-split" ? (() => {
+      const f = SRC.querySelector("[data-planned] [data-wallet-entry]");
+      return { tag: txt(SRC.querySelector("[data-planned] .planned-tag")), label: txt(f.querySelector("label")), placeholder: f.querySelector("textarea").getAttribute("placeholder") || "",
+        photo: txt(f.querySelector("[data-wallet-photo]")), go: txt(f.querySelector("[data-wallet-go]")) };
+    })() : null,
     // /.wallet/ (#static-landing[data-layout=wallet-landing]): groups (Coins, Providers), one card each; a .coin without an href is not wired yet
     groups: SRC.dataset.layout === "wallet-landing" ? [...SRC.querySelectorAll(".group")].map((g) => ({ label: txt(g.querySelector(".group-label")),
       coins: [...g.querySelectorAll(".coin")].map((c) => ({ href: c.getAttribute("href") || "", name: txt(c.querySelector(".name")), tag: txt(c.querySelector(".tag")), src: c.querySelector("img").getAttribute("src") })) })) : null,
   };
-  page.walletQR = !!(page.wallet || page.groups || page.cards);
+  page.walletQR = !!(page.wallet || page.groups || page.cards || page.split);
 
   // ── icons: inline SVG (no icon font) ──
   const ICONS = {
@@ -209,6 +215,104 @@
         h(Button, { type: "submit", variant: "contained", disabled: !ready, "data-gui-node-id": id + ".go", endIcon: h(ArrowGlyph),
           sx: { ml: "auto", textTransform: "none", borderRadius: "10px", px: 2, py: .75, flexShrink: 0, boxShadow: "none" } }, W.go)));
   }
+
+  // ── /.wallet/paypal/demos/split/: the split app over the .me model (assets/split/split-me.js). Every number shown is read from the kernel;
+  //    the only JS arithmetic is the transfer suggestion (SplitMe.settle) and cents formatting. Starts empty: no example data. ──
+  const inputSx = { font: "inherit", fontSize: 14, color: "inherit", bgcolor: "transparent", border: 1, borderColor: "divider", borderRadius: "8px", px: 1, py: .5, minWidth: 0, outline: 0, "&:focus": { borderColor: "primary.main" }, "&:disabled": { opacity: .5 } };
+  const In = (props) => h(Box, { component: "input", ...props, sx: { ...inputSx, ...(props.sx || {}) } });
+  const Btn = (props, label) => h(Button, { size: "small", variant: "outlined", ...props, sx: { textTransform: "none", borderRadius: "8px", color: "text.primary", borderColor: "divider", "&:hover": { borderColor: "primary.main" }, flexShrink: 0, ...(props.sx || {}) } }, label);
+  const Panel = (id, label, ...kids) => h(Box, { component: "section", "data-gui-node-id": id, "aria-label": label, sx: { border: 1, borderColor: "divider", borderRadius: "14px", bgcolor: "background.paper", p: { xs: 1.5, sm: 2 }, mb: 1.5 } },
+    h(Box, { component: "p", sx: { fontSize: ".72rem", letterSpacing: ".06em", textTransform: "uppercase", color: "text.secondary", m: 0, mb: 1.25 } }, label), ...kids);
+  const Muted = (t) => h(Box, { component: "p", sx: { color: "text.secondary", fontSize: 14, m: 0 } }, t);
+  const Num = (c, sx) => h(Box, { component: "span", sx: { fontFamily: MONO, fontSize: 13, textAlign: "right", whiteSpace: "nowrap", ...(sx || {}) } }, c);
+  function SplitApp(p) {
+    const id = p["data-gui-node-id"];
+    const model = React.useMemo(() => window.SplitMe && window.Me ? window.SplitMe(window.Me, { currency: "USD" }) : null, []);
+    const [, bump] = React.useState(0), redraw = () => bump((x) => x + 1);
+    const [name, setName] = React.useState(""), [err, setErr] = React.useState("");
+    const blank = () => ({ editing: null, title: "", paid: {}, inSplit: {}, weight: {}, weights: false });
+    const [f, setF] = React.useState(blank);
+    const [why, setWhy] = React.useState(null);
+    if (!model) return Panel(id, "Split", Muted("The .me kernel did not load."));
+    const S = model, cur = S.currency, money = (c) => S.fmt(c) + " " + cur, mem = S.members(), nm = Object.fromEntries(mem.map((m) => [m.id, m.name]));
+    const tryDo = (fn) => { try { fn(); setErr(""); redraw(); return true; } catch (e) { setErr(e.message); return false; } };
+    const addMember = (e) => { e.preventDefault(); const n = name.trim(); if (!n) return;
+      let base = n.toLowerCase().replace(/[^a-z0-9]/g, "") || "m"; if (!/^[a-z]/.test(base)) base = "m" + base; let mid = base, i = 2; while (nm[mid]) mid = base + i++;
+      if (tryDo(() => S.addMember(mid, n))) { setName(""); setF((x) => ({ ...x, inSplit: { ...x.inSplit, [mid]: true } })); } };
+    const inSplit = (m) => f.inSplit[m] !== false && (f.inSplit[m] || !f.editing && f.inSplit[m] === undefined);
+    const submit = (e) => { e.preventDefault();
+      const paid = {}; for (const m of mem) { const v = (f.paid[m.id] || "").trim(); if (v && Number(v) !== 0) paid[m.id] = v; }
+      const split = f.weights ? Object.fromEntries(mem.filter((m) => inSplit(m.id)).map((m) => [m.id, Number(f.weight[m.id] || 1)])) : mem.filter((m) => inSplit(m.id)).map((m) => m.id);
+      const spec = { title: f.title.trim(), paid, split };
+      if (tryDo(() => (f.editing ? S.editExpense(f.editing, spec) : S.addExpense(spec)))) setF(blank()); };
+    const edit = (x) => { const w = Array.isArray(x.split) ? Object.fromEntries(x.split.map((m) => [m, 1])) : x.split;
+      setF({ editing: x.id, title: x.title, paid: Object.fromEntries(Object.entries(x.paid).map(([k, v]) => [k, String(v)])), inSplit: Object.fromEntries(mem.map((m) => [m.id, !!w[m.id]])),
+        weight: Object.fromEntries(Object.entries(w).map(([k, v]) => [k, String(v)])), weights: !Array.isArray(x.split) }); };
+    const exps = S.expenses(), bals = S.balances(), moves = S.settle(), grid = { display: "grid", gridTemplateColumns: "minmax(0,1fr) auto auto auto", columnGap: 2, rowGap: .75, alignItems: "center" };
+    const members = Panel(id + ".members", "Members",
+      h(Box, { component: "form", onSubmit: addMember, sx: { display: "flex", gap: 1 } },
+        In({ value: name, onChange: (e) => setName(e.target.value), placeholder: "Name", "aria-label": "Member name", "data-gui-node-id": id + ".members.name", sx: { flex: 1 } }),
+        Btn({ type: "submit", "data-gui-node-id": id + ".members.add" }, "+ Add")),
+      mem.length ? h(Box, { sx: { display: "flex", flexWrap: "wrap", gap: .75, mt: 1.25 } }, ...mem.map((m) => h(Box, { key: m.id, component: "span", sx: { fontFamily: MONO, fontSize: 13, border: 1, borderColor: "divider", borderRadius: "999px", px: 1.25, py: .25 } }, m.name))) : null);
+    const form = mem.length ? Panel(id + ".expense", f.editing ? "Edit expense" : "Add expense",
+      h(Box, { component: "form", onSubmit: submit },
+        In({ value: f.title, onChange: (e) => setF({ ...f, title: e.target.value }), placeholder: "What for", "aria-label": "What for", "data-gui-node-id": id + ".expense.title", sx: { width: "100%", mb: 1.25 } }),
+        h(Box, { sx: { display: "grid", gridTemplateColumns: f.weights ? "minmax(0,1fr) 96px 56px 64px" : "minmax(0,1fr) 96px 56px", columnGap: 1, rowGap: .75, alignItems: "center", fontSize: 14 } },
+          h(Box, { component: "span", sx: { color: "text.secondary", fontSize: 12 } }, ""), h(Box, { component: "span", sx: { color: "text.secondary", fontSize: 12 } }, "Paid " + cur), h(Box, { component: "span", sx: { color: "text.secondary", fontSize: 12, textAlign: "center" } }, "In"),
+          f.weights && h(Box, { component: "span", sx: { color: "text.secondary", fontSize: 12 } }, "Weight"),
+          ...mem.flatMap((m) => [
+            h(Box, { key: m.id + "n", component: "span", sx: { overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" } }, m.name),
+            In({ key: m.id + "p", inputMode: "decimal", value: f.paid[m.id] || "", placeholder: "0.00", "aria-label": m.name + " paid", onChange: (e) => setF({ ...f, paid: { ...f.paid, [m.id]: e.target.value } }), sx: { fontFamily: MONO, textAlign: "right" } }),
+            h(Box, { key: m.id + "s", sx: { textAlign: "center" } }, h("input", { type: "checkbox", checked: inSplit(m.id), "aria-label": m.name + " is in", onChange: (e) => setF({ ...f, inSplit: { ...f.inSplit, [m.id]: e.target.checked } }) })),
+            f.weights && In({ key: m.id + "w", inputMode: "numeric", value: f.weight[m.id] || "1", disabled: !inSplit(m.id), "aria-label": m.name + " weight", onChange: (e) => setF({ ...f, weight: { ...f.weight, [m.id]: e.target.value } }), sx: { fontFamily: MONO, textAlign: "right" } }),
+          ].filter(Boolean))),
+        h(Box, { sx: { display: "flex", alignItems: "center", gap: 1, mt: 1.5, flexWrap: "wrap" } },
+          h(Box, { component: "label", sx: { display: "inline-flex", alignItems: "center", gap: .5, fontSize: 13, color: "text.secondary" } }, h("input", { type: "checkbox", checked: f.weights, onChange: (e) => setF({ ...f, weights: e.target.checked }) }), "Uneven (weights)"),
+          f.editing && Btn({ type: "button", onClick: () => setF(blank()) }, "Cancel"),
+          h(Button, { type: "submit", variant: "contained", "data-gui-node-id": id + ".expense.save", sx: { ml: "auto", textTransform: "none", borderRadius: "8px", boxShadow: "none" } }, f.editing ? "Save" : "Add expense")),
+        err && h(Box, { component: "p", role: "alert", sx: { color: "error.main", fontSize: 13, m: 0, mt: 1 } }, err))) : null;
+    const list = exps.length ? Panel(id + ".expenses", "Expenses",
+      ...exps.map((x) => h(Box, { key: x.id, sx: { display: "flex", alignItems: "center", gap: 1, py: .5, borderTop: 1, borderColor: "divider", "&:first-of-type": { borderTop: 0 } } },
+        h(Box, { sx: { flex: 1, minWidth: 0 } }, h(Box, { sx: { fontSize: 14 } }, x.title || x.id),
+          h(Box, { sx: { fontSize: 12, color: "text.secondary" } }, "paid by " + Object.keys(x.paid).map((m) => nm[m]).join(", ") + " · in: " + (Array.isArray(x.split) ? x.split : Object.keys(x.split).filter((m) => x.split[m] > 0)).map((m) => nm[m]).join(", "))),
+        Num(money(x.amount)),
+        Btn({ onClick: () => edit(x), "aria-label": "Edit " + (x.title || x.id) }, "Edit"),
+        Btn({ onClick: () => tryDo(() => { S.removeExpense(x.id); if (f.editing === x.id) setF(blank()); }), "aria-label": "Remove " + (x.title || x.id), sx: { px: 1, minWidth: 0 } }, "×")))) : null;
+    const whyBox = (m) => { const x = S.explain(m), line = (t, v) => h(Box, { sx: { display: "flex", gap: 1 } }, h(Box, { component: "code", sx: { flex: 1, minWidth: 0, overflowWrap: "anywhere" } }, t), v === undefined ? null : Num(S.fmt(v)));
+      return h(Box, { "data-gui-node-id": id + ".balances." + m + ".explain", sx: { gridColumn: "1 / -1", fontFamily: MONO, fontSize: 12, color: "text.secondary", border: 1, borderColor: "divider", borderRadius: "8px", p: 1, mb: .5, display: "grid", gap: .25 } },
+        line("net = " + x.net.expr, x.net.value), ...x.net.inputs.map((i) => line("  " + i.path + " (" + i.status + ")", i.value)),
+        line("paid = " + x.paid.expr, x.paid.value), line("owed = " + x.owed.expr, x.owed.value),
+        ...x.expenses.map((e) => line("  " + (e.title || e.id) + ": owe = " + e.owe.expr, e.owe.value)),
+        h(Box, { sx: { mt: .5 } }, "me.explain() from the kernel; amounts in " + cur + "."));
+    };
+    const balances = mem.length ? Panel(id + ".balances", "Balances",
+      exps.length ? h(Box, { sx: grid },
+        h(Box, { component: "span", sx: { fontSize: 12, color: "text.secondary" } }, ""), Num("paid", { color: "text.secondary", fontFamily: "inherit", fontSize: 12 }), Num("owed", { color: "text.secondary", fontFamily: "inherit", fontSize: 12 }), Num("net", { color: "text.secondary", fontFamily: "inherit", fontSize: 12 }),
+        ...bals.flatMap((b) => [
+          h(Box, { key: b.id + "n", sx: { display: "flex", alignItems: "center", gap: 1, minWidth: 0 } }, h(Box, { component: "span", sx: { overflow: "hidden", textOverflow: "ellipsis" } }, b.name),
+            h(Box, { component: "button", type: "button", onClick: () => setWhy(why === b.id ? null : b.id), "aria-expanded": why === b.id ? "true" : "false", "data-gui-node-id": id + ".balances." + b.id + ".why",
+              sx: { font: "inherit", fontSize: 12, color: "text.secondary", bgcolor: "transparent", border: 0, p: 0, cursor: "pointer", textDecoration: "underline", "&:hover": { color: "text.primary" } } }, why === b.id ? "hide" : "why")),
+          Num(S.fmt(b.paid), { key: b.id + "p" }), Num(S.fmt(b.owed), { key: b.id + "o" }), Num((b.net > 0 ? "+" : "") + S.fmt(b.net), { key: b.id + "t", fontWeight: 600 }),
+          why === b.id ? h(React.Fragment, { key: b.id + "x" }, whyBox(b.id)) : null,
+        ].filter(Boolean)),
+        h(Box, { sx: { gridColumn: "1 / -1", fontSize: 12, color: "text.secondary", mt: .5 } }, "Sum of nets: " + S.fmt(S.check()) + " " + cur)) : Muted("No expenses yet.")) : null;
+    const transfers = exps.length ? Panel(id + ".transfers", "Suggested transfers",
+      moves.length ? h(Box, { sx: { display: "grid", gap: .5 } }, ...moves.map((t, i) => h(Box, { key: i, sx: { display: "flex", alignItems: "center", gap: 1, fontSize: 14 } }, h("span", null, nm[t.from]), h(Box, { component: "span", sx: { color: "text.secondary" } }, "→"), h("span", null, nm[t.to]), Num(money(t.cents), { ml: "auto" }))))
+        : Muted("Everyone is even."), h(Box, { component: "p", sx: { fontSize: 12, color: "text.secondary", m: 0, mt: 1 } }, "Nothing is sent from here.")) : null;
+    return h(Box, { "data-gui-node-id": id }, members, form, list, balances, transfers);
+  }
+  // the plain-language entry, shown but switched off until the Meta model is wired: no fake parsing
+  function PlannedEntry(p) {
+    const W = page.split, id = p["data-gui-node-id"];
+    return h(Box, { "data-gui-node-id": id, "aria-disabled": "true", sx: { mt: 3 } },
+      h(Box, { component: "p", sx: { fontSize: ".72rem", letterSpacing: ".06em", textTransform: "uppercase", color: "text.secondary", m: 0, mb: 1 } }, W.tag),
+      h(Box, { sx: { border: 1, borderStyle: "dashed", borderColor: "divider", borderRadius: "14px", p: { xs: 1.5, sm: 2 }, opacity: .6 } },
+        h(Box, { component: "label", htmlFor: "wallet-who-paid-what", sx: { position: "absolute", width: 1, height: 1, overflow: "hidden", clip: "rect(0 0 0 0)" } }, W.label),
+        h(Box, { component: "textarea", id: "wallet-who-paid-what", disabled: true, rows: 2, placeholder: W.placeholder, sx: { display: "block", width: "100%", resize: "none", border: 0, bgcolor: "transparent", color: "inherit", font: "inherit", fontSize: "1rem" } }),
+        h(Box, { sx: { display: "flex", gap: 1, mt: 1 } },
+          h(Button, { size: "small", variant: "outlined", disabled: true, startIcon: h(CameraGlyph), sx: { textTransform: "none", borderRadius: "10px" } }, W.photo),
+          h(Button, { size: "small", variant: "contained", disabled: true, endIcon: h(ArrowGlyph), sx: { ml: "auto", textTransform: "none", borderRadius: "10px", boxShadow: "none" } }, W.go))));
+  }
   // ── content spec (registry types), same layout as the static page ──
   const cardSx = { display: "block", textDecoration: "none", color: "inherit", borderRadius: "14px", bgcolor: "background.paper", transition: "border-color .15s, box-shadow .15s",
     "&:hover": { borderColor: "primary.main", textDecoration: "none" } };
@@ -261,7 +365,19 @@
       ].filter(Boolean)),
     ]),
   ]);
-  const spec = page.groups ? walletLandingSpec() : page.cards ? walletCardsSpec() : walletSpec();
+  const walletSplitSpec = () => N("Box", { "data-gui-node-id": L, sx: { minHeight: "100vh", bgcolor: "background.default", color: "text.primary", lineHeight: 1.6 } }, [
+    N("LandingTopBar", { "data-gui-node-id": L + ".bars.top" }),
+    N("Box", { component: "main", "data-gui-node-id": LC, sx: { display: "flex", justifyContent: "center", px: { xs: 2, sm: 3 }, pt: { xs: 5, sm: 9 }, pb: 10 } }, [
+      N("Box", { component: "section", "data-gui-node-id": HERO, sx: { width: "100%", maxWidth: 640 } }, [
+        N("Typography", { component: "h1", "data-gui-node-id": HERO + ".title", sx: { fontSize: "clamp(2.2rem, 6vw, 3.4rem)", lineHeight: 1.05, letterSpacing: "-.03em", fontWeight: 800, m: 0, mb: 1.5 } }, [page.h1]),
+        page.lead && N("Typography", { component: "p", "data-gui-node-id": HERO + ".line", sx: { fontSize: "1rem", color: "text.secondary", m: 0, mb: 4 } }, [page.lead]),
+        N("SplitApp", { "data-gui-node-id": LC + ".split" }),
+        N("PlannedEntry", { "data-gui-node-id": LC + ".planned" }),
+        page.note && T(page.note, { fontSize: ".8rem", color: "text.secondary", lineHeight: 1.6, mt: 1.75, mx: .25 }, { component: "p", "data-gui-node-id": HERO + ".note" }),
+      ].filter(Boolean)),
+    ]),
+  ]);
+  const spec = page.split ? walletSplitSpec() : page.groups ? walletLandingSpec() : page.cards ? walletCardsSpec() : walletSpec();
 
   // ── theme (page-scoped keys from window.__thisGuiThemeScope; neurons.me, dark by default) + mount ──
   const scope = window.__thisGuiThemeScope || {};
@@ -270,7 +386,7 @@
   const INSPECTOR_ON = params.get("inspector") === "1";
   if (G.getInspectorEnabled() !== INSPECTOR_ON) G.setInspectorEnabled(INSPECTOR_ON);
   G.mount(spec, ROOT, {
-    gui: { ...G, Theme: PageTheme, registry: { ...(G.Registry || G.registry), LandingTopBar, WalletEntry } },
+    gui: { ...G, Theme: PageTheme, registry: { ...(G.Registry || G.registry), LandingTopBar, WalletEntry, SplitApp, PlannedEntry } },
     devtools: { enabled: true, inspector: INSPECTOR_ON, adminView: false, inspectorToggleVisible: false },
   });
   html.classList.add("gui-on");

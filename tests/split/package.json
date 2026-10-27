@@ -1,0 +1,7 @@
+{
+  "name": "wallet-split-tests",
+  "private": true,
+  "description": "Node tests for assets/split/split-me.js (the .me expense-split model).",
+  "scripts": { "test": "node --test" },
+  "dependencies": { "this.me": "4.2.1" }
+}

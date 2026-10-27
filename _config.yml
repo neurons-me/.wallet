@@ -26,6 +26,7 @@ exclude:
   - node_modules
   - "*/node_modules"
   - vendor
+  - tests
 
 me_theme:
   brand: this.wallet

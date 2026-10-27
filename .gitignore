@@ -33,3 +33,6 @@ wallet.pip/poetry.lock
 # ─── Rust (crate) ─────────────────────────────
 wallet.crate/target/
 wallet.crate/Cargo.lock
+
+# split model tests (tests/split)
+tests/split/node_modules/
