@@ -13,6 +13,7 @@ title: Status — this.wallet
 | Bitcoin handler | `wallet.npm/src/types/bitcoin.js` | Not implemented. The file is empty. |
 | Stellar handler | `wallet.npm/src/types/stellar.js` | Not implemented. The file is empty. |
 | Rust JSON-RPC server | `wallet.crate` (crate `this-wallet` 0.1.1) | Working for EVM chains. `/bitcoin` and `/stellar` pages are placeholders. |
+| PayPal provider | none | Planned. No code in any package. See [PayPal](./PayPal.html). |
 | Python package | `wallet.pip` | Stub only. No wallet code. |
 
 `new Wallet({ type: 'bitcoin' })` and `new Wallet({ type: 'stellar' })` currently throw, because those modules export nothing.

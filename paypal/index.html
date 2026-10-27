@@ -5,23 +5,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="theme-color" content="#0b0b0f" />
   <title>PayPal · .wallet</title>
-  <meta name="description" content="Who paid what: say it or snap the receipt, the .me kernel works out who owes whom, and PayPal settles after you approve." />
+  <meta name="description" content="PayPal as a provider for .wallet: documentation and demos. Planned, not implemented yet." />
   <link rel="canonical" href="https://neurons-me.github.io/.wallet/paypal/" />
   <link rel="icon" type="image/png" href="https://res.cloudinary.com/dkwnxf6gm/image/upload/v1760629064/neurons.me_b50f6a.png" />
-  <meta property="og:title" content="Paypal .me · .wallet" />
-  <meta property="og:description" content="Who paid what: say it or snap the receipt. You approve, PayPal settles." />
+  <meta property="og:title" content="PayPal · .wallet" />
+  <meta property="og:description" content="PayPal as a provider for .wallet: documentation and demos. Planned, not implemented yet." />
   <meta property="og:url" content="https://neurons-me.github.io/.wallet/paypal/" />
   <meta property="og:type" content="website" />
-  <meta property="og:image" content="https://neurons-me.github.io/.wallet/assets/og/paypal-og.png" />
-  <meta property="og:image:type" content="image/png" />
-  <meta property="og:image:width" content="1200" />
-  <meta property="og:image:height" content="630" />
-  <meta property="og:image:alt" content="PayPal monogram with the text Paypal .me" />
-  <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:title" content="Paypal .me · .wallet" />
-  <meta name="twitter:description" content="Who paid what: say it or snap the receipt. You approve, PayPal settles." />
-  <meta name="twitter:image" content="https://neurons-me.github.io/.wallet/assets/og/paypal-og.png" />
-  <meta name="twitter:image:alt" content="PayPal monogram with the text Paypal .me" />
+  <meta name="twitter:card" content="summary" />
   <!-- .GUI (this.gui@4.2.1, which has G.QRme) renders this page from the static markup below (/.wallet/assets/wallet-gui.js, the same topbar as the neurons-me docs); the static page stays as the no-JS / CDN-failure fallback.
        Same page-scoped theme keys as the docs (me-docs), neurons.me, dark by default, so the light / dark choice carries across them. -->
   <script>
@@ -48,22 +39,24 @@
     html:not(.gui-on) .topnav .logo img { width: 28px; height: 28px; display: block; }
     html:not(.gui-on) .mepath { font: 13px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; white-space: nowrap; }
     html:not(.gui-on) .mepath a { color: #4fd1c5; }
-    html:not(.gui-on) .mepath a + a::before, html:not(.gui-on) .mepath a + a + .here::before { content: "/"; opacity: .6; margin: 0 1px; color: #8b949e; }
+    html:not(.gui-on) .mepath a:nth-child(n+3)::before, html:not(.gui-on) .mepath .here:not(:nth-child(2))::before { content: "/"; opacity: .6; margin: 0 1px; color: #8b949e; }
     html:not(.gui-on) .mepath .here { font-weight: 600; color: #e8eded; }
     html:not(.gui-on) .topnav .spacer { flex: 1; }
     html:not(.gui-on) .topnav .act, html:not(.gui-on) .topnav .gh { font: 12px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; color: #8b949e; }
     html:not(.gui-on) main { max-width: 640px; margin: 0 auto; padding: 88px 20px 80px; }
     html:not(.gui-on) h1 { font-size: clamp(2.2rem, 6vw, 3.4rem); line-height: 1.05; letter-spacing: -.03em; font-weight: 800; margin: 0 0 12px; }
     html:not(.gui-on) .lead { color: #a1a1aa; margin: 0 0 32px; }
-    html:not(.gui-on) form { border: 1px solid #30363d; border-radius: 14px; background: #0b1114; padding: 16px; }
-    html:not(.gui-on) textarea { display: block; width: 100%; min-height: 110px; border: 0; outline: 0; resize: vertical; background: transparent; color: inherit; font: inherit; font-size: 1.05rem; }
-    html:not(.gui-on) .row { display: flex; align-items: center; gap: 8px; margin-top: 12px; }
-    html:not(.gui-on) button { font: inherit; font-size: .9rem; color: inherit; background: transparent; border: 1px solid #30363d; border-radius: 10px; padding: 6px 12px; }
-    html:not(.gui-on) button[type=submit] { margin-left: auto; background: #4fd1c5; border-color: #4fd1c5; color: #0b0b0f; }
+    html:not(.gui-on) .cards { display: grid; grid-template-columns: 1fr; gap: 10px; }
+    @media (min-width: 640px) { html:not(.gui-on) .cards { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+    html:not(.gui-on) .card { display: block; padding: 16px 20px; border: 1px solid #30363d; border-radius: 14px; background: #0b1114; }
+    html:not(.gui-on) .card:hover { border-color: #4fd1c5; }
+    html:not(.gui-on) .card .t { font-weight: 600; font-size: 1.02rem; }
+    html:not(.gui-on) .card .d { color: #8b949e; font-size: .9rem; margin-top: 4px; }
+    html:not(.gui-on) .card .tag { display: inline-block; margin-top: 10px; font-size: .72rem; letter-spacing: .06em; text-transform: uppercase; color: #8b949e; }
   </style>
 </head>
 <body>
-<div id="static-landing" data-layout="wallet-paypal">
+<div id="static-landing" data-layout="wallet-cards">
   <nav class="topnav" aria-label="me path">
     <a class="logo" href="https://neurons-me.github.io/" title="neurons.me"><img src="https://res.cloudinary.com/dkwnxf6gm/image/upload/v1760629064/neurons.me_b50f6a.png" alt="neurons.me" width="28" height="28" /></a>
     <div class="mepath"><a href="https://neurons-me.github.io/.me/" title=".me">me://</a><a href="/.wallet/" title=".wallet">.wallet</a><span class="here" aria-current="page">paypal</span></div>
@@ -73,20 +66,16 @@
   </nav>
   <main>
     <header>
-      <h1>Who paid what?</h1>
-      <p class="lead">Say it or snap the receipt. You approve, PayPal settles.</p>
+      <h1>PayPal</h1>
+      <p class="lead">A provider for .wallet. Planned: not implemented yet.</p>
     </header>
-    <form data-wallet-entry onsubmit="return false">
-      <label for="wallet-who-paid-what" hidden>Who paid what</label>
-      <textarea id="wallet-who-paid-what" placeholder="Describe it in plain words"></textarea>
-      <div class="row">
-        <button type="button" data-wallet-photo aria-label="Add a receipt photo">Receipt photo</button>
-        <button type="submit" data-wallet-go disabled>Split</button>
-      </div>
-    </form>
+    <div class="cards">
+      <a class="card" href="/.wallet/docs/PayPal.html"><div class="t">Docs</div><div class="d">What exists today, what is planned, and the PayPal APIs involved.</div><span class="tag">Reference</span></a>
+      <a class="card" href="/.wallet/paypal/demos/"><div class="t">Demos</div><div class="d">Things built on this integration.</div><span class="tag">Demos</span></a>
+    </div>
   </main>
 </div>
 <div id="root"></div>
-<script src="/.wallet/assets/wallet-gui.js?v=3" onerror="document.documentElement.classList.remove('gui-boot')"></script>
+<script src="/.wallet/assets/wallet-gui.js?v=4" onerror="document.documentElement.classList.remove('gui-boot')"></script>
 </body>
 </html>

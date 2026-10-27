@@ -22,6 +22,10 @@
   const page = {
     path, docs: SRC.querySelector(".topnav .act")?.getAttribute("href"), github: SRC.querySelector(".topnav .gh")?.getAttribute("href"),
     h1: txt(header.querySelector("h1")), lead: txt(header.querySelector(".lead")),
+    // a small caption under the entry (.note), when the page has one
+    note: txt(SRC.querySelector("main > .note")),
+    // /.wallet/paypal/ and /.wallet/paypal/demos/ (#static-landing[data-layout=wallet-cards]): one card each (.card: .t title, .d line, .tag)
+    cards: SRC.dataset.layout === "wallet-cards" ? [...SRC.querySelectorAll(".cards > .card")].map((c) => ({ href: c.getAttribute("href") || "", title: txt(c.querySelector(".t")), desc: txt(c.querySelector(".d")), tag: txt(c.querySelector(".tag")) })) : null,
     // /.wallet/paypal/ (#static-landing[data-layout=wallet-paypal]): the entry's own labels come from the static form, like every other text here
     wallet: SRC.dataset.layout === "wallet-paypal" ? (() => {
       const f = SRC.querySelector("[data-wallet-entry]");
@@ -32,7 +36,7 @@
     groups: SRC.dataset.layout === "wallet-landing" ? [...SRC.querySelectorAll(".group")].map((g) => ({ label: txt(g.querySelector(".group-label")),
       coins: [...g.querySelectorAll(".coin")].map((c) => ({ href: c.getAttribute("href") || "", name: txt(c.querySelector(".name")), tag: txt(c.querySelector(".tag")), src: c.querySelector("img").getAttribute("src") })) })) : null,
   };
-  page.walletQR = !!(page.wallet || page.groups);
+  page.walletQR = !!(page.wallet || page.groups || page.cards);
 
   // ── icons: inline SVG (no icon font) ──
   const ICONS = {
@@ -223,6 +227,7 @@
         N("Typography", { component: "h1", "data-gui-node-id": HERO + ".title", sx: { fontSize: "clamp(2.2rem, 6vw, 3.4rem)", lineHeight: 1.05, letterSpacing: "-.03em", fontWeight: 800, m: 0, mb: 1.5 } }, [page.h1]),
         page.lead && N("Typography", { component: "p", "data-gui-node-id": HERO + ".line", sx: { fontSize: "1rem", color: "text.secondary", m: 0, mb: 4 } }, [page.lead]),
         N("WalletEntry", { "data-gui-node-id": HERO + ".entry" }),
+        page.note && T(page.note, { fontSize: ".8rem", color: "text.secondary", lineHeight: 1.6, mt: 1.75, mx: .25 }, { component: "p", "data-gui-node-id": HERO + ".note" }),
       ].filter(Boolean)),
     ]),
   ]);
@@ -243,7 +248,20 @@
       ]),
     ]),
   ]);
-  const spec = page.groups ? walletLandingSpec() : walletSpec();
+  // a short page of cards (the PayPal integration page, its demos): h1, one line, then the cards
+  const textCard = (c) => N("Card", { component: "a", href: c.href, variant: "outlined", "data-gui-node-id": LC + ".cards." + c.title.toLowerCase().replace(/[^a-z0-9]+/g, "-"),
+    sx: { ...cardSx, p: "16px 20px" } }, [title(c.title), c.desc && desc(c.desc), c.tag && T(c.tag, { display: "block", fontSize: ".72rem", letterSpacing: ".06em", textTransform: "uppercase", color: "text.secondary", lineHeight: 1.6, mt: 1.25 }, { component: "span" })].filter(Boolean));
+  const walletCardsSpec = () => N("Box", { "data-gui-node-id": L, sx: { minHeight: "100vh", bgcolor: "background.default", color: "text.primary", lineHeight: 1.6 } }, [
+    N("LandingTopBar", { "data-gui-node-id": L + ".bars.top" }),
+    N("Box", { component: "main", "data-gui-node-id": LC, sx: { display: "flex", justifyContent: "center", px: { xs: 2, sm: 3 }, pt: { xs: 5, sm: 9 }, pb: 10 } }, [
+      N("Box", { component: "section", "data-gui-node-id": HERO, sx: { width: "100%", maxWidth: 760 } }, [
+        N("Typography", { component: "h1", "data-gui-node-id": HERO + ".title", sx: { fontSize: "clamp(2.2rem, 6vw, 3.4rem)", lineHeight: 1.05, letterSpacing: "-.03em", fontWeight: 800, m: 0, mb: 1.5 } }, [page.h1]),
+        page.lead && N("Typography", { component: "p", "data-gui-node-id": HERO + ".line", sx: { fontSize: "1rem", color: "text.secondary", m: 0, mb: 4 } }, [page.lead]),
+        N("Box", { "data-gui-node-id": LC + ".cards", sx: { display: "grid", gridTemplateColumns: "minmax(0, 1fr)", gap: "10px", alignItems: "stretch", [WIDE]: { gridTemplateColumns: "repeat(2, minmax(0, 1fr))" } } }, page.cards.map(textCard)),
+      ].filter(Boolean)),
+    ]),
+  ]);
+  const spec = page.groups ? walletLandingSpec() : page.cards ? walletCardsSpec() : walletSpec();
 
   // ── theme (page-scoped keys from window.__thisGuiThemeScope; neurons.me, dark by default) + mount ──
   const scope = window.__thisGuiThemeScope || {};
