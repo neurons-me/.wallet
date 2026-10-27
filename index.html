@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="en" data-accent="neutral">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#0b0b0f" />
+  <title>.wallet</title>
+  <meta name="description" content="this.wallet: Ethereum, PayPal and the coins on the way." />
+  <link rel="canonical" href="https://neurons-me.github.io/.wallet/" />
+  <link rel="icon" type="image/png" href="https://res.cloudinary.com/dkwnxf6gm/image/upload/v1760629064/neurons.me_b50f6a.png" />
+  <meta property="og:title" content=".wallet" />
+  <meta property="og:description" content="this.wallet: Ethereum, PayPal and the coins on the way." />
+  <meta property="og:url" content="https://neurons-me.github.io/.wallet/" />
+  <meta property="og:type" content="website" />
+  <!-- .GUI (this.gui@4.2.1, which has G.QRme) renders this page from the static markup below (/.wallet/assets/wallet-gui.js, the same topbar as the neurons-me docs); the static page stays as the no-JS / CDN-failure fallback.
+       Same page-scoped theme keys as the docs (me-docs), neurons.me, dark by default, so the light / dark choice carries across them. -->
+  <script>
+    window.__thisGuiThemeScope = { scopeId: "me-docs", themeModeKey: "me-docs.themeMode", themeIdKey: "me-docs.themeId", defaultMode: "dark" };
+    try {
+      if (!localStorage.getItem("me-docs.themeMode")) localStorage.setItem("me-docs.themeMode", "dark");
+      if (!localStorage.getItem("me-docs.themeId")) localStorage.setItem("me-docs.themeId", "neurons.me");
+    } catch (e) {}
+    document.documentElement.classList.add("gui-boot");
+  </script>
+  <!-- No icon font: every icon is inline SVG; hide any icon-font span so its name never shows as text. -->
+  <style>.material-symbols-rounded,.material-symbols-outlined,.material-icons{display:none!important} body{margin:0} .gui-boot #static-landing{display:none}</style>
+  <!-- Pinned dependencies (jsDelivr, exact versions, Subresource Integrity). -->
+  <script src="https://cdn.jsdelivr.net/npm/react@18.3.1/umd/react.production.min.js" integrity="sha384-DGyLxAyjq0f9SPpVevD6IgztCFlnMF6oW/XQGmfe+IsZ8TqEiDrcHkMLKI6fiB/Z" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/react-dom@18.3.1/umd/react-dom.production.min.js" integrity="sha384-gTGxhz21lVGYNMcdJOyq01Edg0jhn/c22nsx0kyqP0TxaV5WVdsSH1fSDUf5YJj1" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/this.gui@4.2.1/dist/this.gui.umd.js" integrity="sha384-hMM5lKGHIJVSKMQgLKFJCTZNMwCQ7XHWcMHCiiTwDFzA0a2q4p0crD/NyA9Pg7wb" crossorigin="anonymous"></script>
+  <!-- Static page styles, off once .GUI has rendered (html.gui-on). -->
+  <style>
+    html:not(.gui-on) * { box-sizing: border-box; }
+    html:not(.gui-on) body { font-family: "Inter", "Helvetica Neue", Helvetica, Arial, sans-serif; background: #0b0b0f; color: #f4f4f5; line-height: 1.6; }
+    html:not(.gui-on) a { color: inherit; text-decoration: none; }
+    html:not(.gui-on) .topnav { position: sticky; top: 0; display: flex; align-items: center; gap: 12px; min-height: 48px; padding: 0 20px; background: #0b1114; border-bottom: 1px solid #30363d; }
+    html:not(.gui-on) .topnav .logo { display: inline-flex; line-height: 0; }
+    html:not(.gui-on) .topnav .logo img { width: 28px; height: 28px; display: block; }
+    html:not(.gui-on) .mepath { font: 13px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; white-space: nowrap; }
+    html:not(.gui-on) .mepath a { color: #4fd1c5; }
+    html:not(.gui-on) .mepath .sep { opacity: .6; margin: 0 1px; }
+    html:not(.gui-on) .mepath .here { font-weight: 600; color: #e8eded; }
+    html:not(.gui-on) .topnav .spacer { flex: 1; }
+    html:not(.gui-on) .topnav .act, html:not(.gui-on) .topnav .gh { font: 12px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; color: #8b949e; }
+    html:not(.gui-on) main { max-width: 760px; margin: 0 auto; padding: 56px 20px 80px; }
+    html:not(.gui-on) h1 { font-size: clamp(2.2rem, 6vw, 3.4rem); line-height: 1.05; letter-spacing: -.03em; font-weight: 800; margin: 0 0 28px; }
+    html:not(.gui-on) .group { margin-bottom: 32px; }
+    html:not(.gui-on) .group-label { font-size: .78rem; text-transform: uppercase; letter-spacing: .08em; color: #8b949e; margin: 0 0 12px; }
+    html:not(.gui-on) .coins { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+    html:not(.gui-on) .coin { display: flex; flex-direction: column; align-items: center; gap: 8px; border: 1px solid #30363d; border-radius: 14px; background: #0b1114; padding: 16px 12px; }
+    html:not(.gui-on) .coin.soon { opacity: .55; }
+    html:not(.gui-on) .coin img { width: 88px; height: 88px; }
+    html:not(.gui-on) .coin .name { font-weight: 600; }
+    html:not(.gui-on) .coin .tag { font-size: .72rem; letter-spacing: .06em; text-transform: uppercase; color: #8b949e; }
+    @media (min-width: 640px) { html:not(.gui-on) .coins { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+  </style>
+</head>
+<body>
+<div id="static-landing" data-layout="wallet-landing">
+  <nav class="topnav" aria-label="me path">
+    <a class="logo" href="https://neurons-me.github.io/" title="neurons.me"><img src="https://res.cloudinary.com/dkwnxf6gm/image/upload/v1760629064/neurons.me_b50f6a.png" alt="neurons.me" width="28" height="28" /></a>
+    <div class="mepath"><a href="https://neurons-me.github.io/.me/" title=".me">me://</a><span class="here" aria-current="page">.wallet</span></div>
+    <span class="spacer"></span>
+    <a class="act" data-topbar="docs" href="/.wallet/docs/">Docs</a>
+    <a class="gh" href="https://github.com/neurons-me/.wallet">GitHub</a>
+  </nav>
+  <main>
+    <header><h1>Wallet</h1></header>
+    <!-- One card per currency. Icons: the .wallet set (neurons-me/.wallet, wallet.crate/src/static/imgs/icons), copied unchanged into assets/coins/ (wallet.crate/src is excluded from Pages);
+         A card without an href is a currency that is not wired yet. -->
+    <section class="group" aria-labelledby="g-coins">
+      <p class="group-label" id="g-coins">Coins</p>
+      <div class="coins">
+        <a class="coin" href="/.wallet/docs/Ethereum-Handler.html"><img src="/.wallet/assets/coins/eth_crypto.png" alt="" /><span class="name">Ethereum</span></a>
+        <div class="coin soon" aria-disabled="true"><img src="/.wallet/assets/coins/bitcoin_crypto.png" alt="" /><span class="name">Bitcoin</span><span class="tag">Soon</span></div>
+        <div class="coin soon" aria-disabled="true"><img src="/.wallet/assets/coins/stellar-blockchain.svg" alt="" /><span class="name">Stellar</span><span class="tag">Soon</span></div>
+        <div class="coin soon" aria-disabled="true"><img src="/.wallet/assets/coins/litecoin_crypto.png" alt="" /><span class="name">Litecoin</span><span class="tag">Soon</span></div>
+        <div class="coin soon" aria-disabled="true"><img src="/.wallet/assets/coins/xrp_ripple_crypto.png" alt="" /><span class="name">XRP</span><span class="tag">Soon</span></div>
+      </div>
+    </section>
+    <!-- PayPal is a provider, not a currency. Mark: PayPal full-colour monogram, unmodified, from PayPal Newsroom (https://newsroom.paypal-corp.com/download/PayPal-Monogram-Logo-2024.zip, Monogram/PayPal-Monogram-FullColor-RGB.png) -->
+    <section class="group" aria-labelledby="g-providers">
+      <p class="group-label" id="g-providers">Providers</p>
+      <div class="coins">
+        <a class="coin" href="/.wallet/paypal/"><img src="/.wallet/assets/providers/paypal-monogram.png" alt="" /><span class="name">PayPal</span></a>
+      </div>
+    </section>
+  </main>
+</div>
+<div id="root"></div>
+<script src="/.wallet/assets/wallet-gui.js?v=3" onerror="document.documentElement.classList.remove('gui-boot')"></script>
+</body>
+</html>
