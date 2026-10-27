@@ -38,7 +38,7 @@
     html:not(.gui-on) .topnav .logo img { width: 28px; height: 28px; display: block; }
     html:not(.gui-on) .mepath { font: 13px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; white-space: nowrap; }
     html:not(.gui-on) .mepath a { color: #4fd1c5; }
-    html:not(.gui-on) .mepath .sep { opacity: .6; margin: 0 1px; }
+    html:not(.gui-on) .mepath a + a::before, html:not(.gui-on) .mepath a + a + .here::before { content: "/"; opacity: .6; margin: 0 1px; color: #8b949e; }
     html:not(.gui-on) .mepath .here { font-weight: 600; color: #e8eded; }
     html:not(.gui-on) .topnav .spacer { flex: 1; }
     html:not(.gui-on) .topnav .act, html:not(.gui-on) .topnav .gh { font: 12px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; color: #8b949e; }
@@ -56,7 +56,7 @@
 <div id="static-landing" data-layout="wallet-paypal">
   <nav class="topnav" aria-label="me path">
     <a class="logo" href="https://neurons-me.github.io/" title="neurons.me"><img src="https://res.cloudinary.com/dkwnxf6gm/image/upload/v1760629064/neurons.me_b50f6a.png" alt="neurons.me" width="28" height="28" /></a>
-    <div class="mepath"><a href="https://neurons-me.github.io/.me/" title=".me">me://</a><a href="/.wallet/" title=".wallet">.wallet</a><span class="sep">/</span><span class="here" aria-current="page">paypal</span></div>
+    <div class="mepath"><a href="https://neurons-me.github.io/.me/" title=".me">me://</a><a href="/.wallet/" title=".wallet">.wallet</a><span class="here" aria-current="page">paypal</span></div>
     <span class="spacer"></span>
     <a class="act" data-topbar="docs" href="/.wallet/docs/">Docs</a>
     <a class="gh" href="https://github.com/neurons-me/.wallet">GitHub</a>
