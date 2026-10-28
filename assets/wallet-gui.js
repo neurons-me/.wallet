@@ -234,6 +234,11 @@
     const [f, setF] = React.useState(blank);
     const [why, setWhy] = React.useState(null);
     if (!model) return Panel(id, "Split", Muted("The .me kernel did not load."));
+    // the Meta slot (PlannedEntry) hands over validated, parsed expenses; .me computes everything from here
+    window.__walletSplit = model;
+    React.useEffect(() => { const on = (ev) => { const P = window.MetaParse; if (!P) return; const { members: ms, specs } = P.toSplitSpecs(ev.detail);
+      tryDo(() => { const have = new Set(model.members().map((m) => m.id)); for (const m of ms) if (!have.has(m.id)) model.addMember(m.id, m.name); for (const sp of specs) model.addExpense(sp); }); };
+      window.addEventListener("wallet:parsed", on); return () => window.removeEventListener("wallet:parsed", on); }, []);
     const S = model, cur = S.currency, money = (c) => S.fmt(c) + " " + cur, mem = S.members(), nm = Object.fromEntries(mem.map((m) => [m.id, m.name]));
     const tryDo = (fn) => { try { fn(); setErr(""); redraw(); return true; } catch (e) { setErr(e.message); return false; } };
     const addMember = (e) => { e.preventDefault(); const n = name.trim(); if (!n) return;
@@ -301,17 +306,38 @@
         : Muted("Everyone is even."), h(Box, { component: "p", sx: { fontSize: 12, color: "text.secondary", m: 0, mt: 1 } }, "Nothing is sent from here.")) : null;
     return h(Box, { "data-gui-node-id": id }, members, form, list, balances, transfers);
   }
-  // the plain-language entry, shown but switched off until the Meta model is wired: no fake parsing
+  // the plain-language entry: live only when the local Meta parse server (tools/meta-parse-server.mjs) answers /health with a key;
+  //   otherwise it stays disabled with an honest label. The model only parses; the key never reaches the page.
+  const META_URL = (window.__walletMetaParseUrl || "http://127.0.0.1:8787").replace(/\/$/, "");
   function PlannedEntry(p) {
     const W = page.split, id = p["data-gui-node-id"];
-    return h(Box, { "data-gui-node-id": id, "aria-disabled": "true", sx: { mt: 3 } },
-      h(Box, { component: "p", sx: { fontSize: ".72rem", letterSpacing: ".06em", textTransform: "uppercase", color: "text.secondary", m: 0, mb: 1 } }, W.tag),
-      h(Box, { sx: { border: 1, borderStyle: "dashed", borderColor: "divider", borderRadius: "14px", p: { xs: 1.5, sm: 2 }, opacity: .6 } },
+    const [st, setSt] = React.useState({ live: false, tag: W.tag + " · checking local parse server…" });
+    const [text, setText] = React.useState(""), [img, setImg] = React.useState(null), [busy, setBusy] = React.useState(false), [msg, setMsg] = React.useState("");
+    const fileRef = React.useRef(null);
+    React.useEffect(() => { let off = false;
+      fetch(META_URL + "/health").then((r) => r.json()).then((j) => { if (off) return;
+        setSt(j.ok && j.keyConfigured ? { live: true, tag: "Meta model · " + j.model + " via local server" } : { live: false, tag: W.tag + " · local server has no META_API_KEY" }); })
+        .catch(() => !off && setSt({ live: false, tag: W.tag + " · off: run node tools/meta-parse-server.mjs locally" }));
+      return () => { off = true; }; }, []);
+    const go = async (e) => { e.preventDefault(); if (!st.live || busy || !window.MetaParse) return; setBusy(true); setMsg("");
+      try { const S = window.__walletSplit, members = S ? S.members().map((m) => m.name) : [];
+        const r = await fetch(META_URL + "/parse", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ text, members, speaker: members[0] || "", image: img }) });
+        const j = await r.json(); if (!r.ok) throw new Error(j.error || "parse failed");
+        const v = window.MetaParse.validate(j); // validated again on the page before .me sees it
+        window.dispatchEvent(new CustomEvent("wallet:parsed", { detail: v })); setText(""); setImg(null); setMsg("Added " + v.expenses.length + " expense(s); .me computed the split.");
+      } catch (err) { setMsg(err.message); } finally { setBusy(false); } };
+    const pick = (e) => { const f = e.target.files && e.target.files[0]; if (!f) return; const rd = new FileReader(); rd.onload = () => setImg(rd.result); rd.readAsDataURL(f); };
+    const live = st.live;
+    return h(Box, { component: "form", onSubmit: go, "data-gui-node-id": id, "aria-disabled": live ? "false" : "true", sx: { mt: 3 } },
+      h(Box, { component: "p", sx: { fontSize: ".72rem", letterSpacing: ".06em", textTransform: "uppercase", color: "text.secondary", m: 0, mb: 1 } }, st.tag),
+      h(Box, { sx: { border: 1, borderStyle: live ? "solid" : "dashed", borderColor: "divider", borderRadius: "14px", p: { xs: 1.5, sm: 2 }, opacity: live ? 1 : .6 } },
         h(Box, { component: "label", htmlFor: "wallet-who-paid-what", sx: { position: "absolute", width: 1, height: 1, overflow: "hidden", clip: "rect(0 0 0 0)" } }, W.label),
-        h(Box, { component: "textarea", id: "wallet-who-paid-what", disabled: true, rows: 2, placeholder: W.placeholder, sx: { display: "block", width: "100%", resize: "none", border: 0, bgcolor: "transparent", color: "inherit", font: "inherit", fontSize: "1rem" } }),
+        h(Box, { component: "textarea", id: "wallet-who-paid-what", disabled: !live || busy, rows: 2, value: text, onChange: (e) => setText(e.target.value), placeholder: W.placeholder, sx: { display: "block", width: "100%", resize: "none", border: 0, bgcolor: "transparent", color: "inherit", font: "inherit", fontSize: "1rem" } }),
+        h("input", { ref: fileRef, type: "file", accept: "image/png,image/jpeg,image/webp", hidden: true, onChange: pick }),
         h(Box, { sx: { display: "flex", gap: 1, mt: 1 } },
-          h(Button, { size: "small", variant: "outlined", disabled: true, startIcon: h(CameraGlyph), sx: { textTransform: "none", borderRadius: "10px" } }, W.photo),
-          h(Button, { size: "small", variant: "contained", disabled: true, endIcon: h(ArrowGlyph), sx: { ml: "auto", textTransform: "none", borderRadius: "10px", boxShadow: "none" } }, W.go))));
+          h(Button, { size: "small", variant: "outlined", disabled: !live || busy, onClick: () => fileRef.current && fileRef.current.click(), startIcon: h(CameraGlyph), sx: { textTransform: "none", borderRadius: "10px" } }, img ? "Receipt ✓" : W.photo),
+          h(Button, { type: "submit", size: "small", variant: "contained", disabled: !live || busy || (!text.trim() && !img), endIcon: h(ArrowGlyph), sx: { ml: "auto", textTransform: "none", borderRadius: "10px", boxShadow: "none" } }, busy ? "Parsing…" : W.go)),
+        msg && h(Box, { component: "p", role: "status", sx: { fontSize: 13, color: "text.secondary", m: 0, mt: 1 } }, msg)));
   }
   // ── content spec (registry types), same layout as the static page ──
   const cardSx = { display: "block", textDecoration: "none", color: "inherit", borderRadius: "14px", bgcolor: "background.paper", transition: "border-color .15s, box-shadow .15s",

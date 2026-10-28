@@ -41,6 +41,7 @@
   <!-- The split model: a .me kernel (this.me@4.2.1, UMD global Me) and the rules in /.wallet/assets/split/split-me.js (window.SplitMe). -->
   <script src="https://cdn.jsdelivr.net/npm/this.me@4.2.1/dist/me.umd.js" integrity="sha384-ElnWCZOb324gqFJ2M/Fxy4CZ6Si131WIbR54iYomzEbTloUDLfBzZ05qi1nZ7+4G" crossorigin="anonymous"></script>
   <script src="/.wallet/assets/split/split-me.js?v=1"></script>
+  <script src="/.wallet/assets/split/meta-parse.js?v=1"></script>
   <!-- Static page styles, off once .GUI has rendered (html.gui-on). -->
   <style>
     html:not(.gui-on) * { box-sizing: border-box; }
@@ -86,7 +87,7 @@
       <p class="needs-js">The split runs in the browser with JavaScript.</p>
     </section>
     <section data-planned>
-      <p class="planned-tag">Planned · Meta model</p>
+      <p class="planned-tag">Planned · Meta model (needs the local parse server)</p>
       <form data-wallet-entry onsubmit="return false">
         <label for="wallet-who-paid-what" hidden>Describe in plain language</label>
         <textarea id="wallet-who-paid-what" placeholder="Describe it in plain language" disabled></textarea>
@@ -100,6 +101,6 @@
   </main>
 </div>
 <div id="root"></div>
-<script src="/.wallet/assets/wallet-gui.js?v=5" onerror="document.documentElement.classList.remove('gui-boot')"></script>
+<script src="/.wallet/assets/wallet-gui.js?v=6" onerror="document.documentElement.classList.remove('gui-boot')"></script>
 </body>
 </html>
