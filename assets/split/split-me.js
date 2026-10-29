@@ -1,4 +1,4 @@
-// split.me: the expense-split model of /.wallet/paypal/demos/split/, on a .me kernel (this.me@4.2.1).
+// split.me: the expense-split model of /.wallet/paypal/split/, on a .me kernel (this.me@4.2.1).
 // Same file in the browser (window.SplitMe, needs window.Me from this.me's UMD build) and in Node (require; tests in /tests/split/).
 //
 // What is a declared rule (me["="]) and what is plain JS:

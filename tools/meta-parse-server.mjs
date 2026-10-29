@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Local parse server for /.wallet/paypal/demos/split/: plain text (+ optional receipt image) -> Meta Model API -> strictly validated
+// Local parse server for /.wallet/paypal/split/: plain text (+ optional receipt image) -> Meta Model API -> strictly validated
 // { expenses: [{ payer, amountCents, participants, description }] }. The model only parses; split-me.js (.me) computes the split.
 // The key stays here: META_API_KEY from the environment or a git-ignored .env at the repo root. It is never logged or returned.
 //   node tools/meta-parse-server.mjs            (PORT=8787, META_MODEL=muse-spark-1.3, META_BASE_URL=https://api.meta.ai/v1)

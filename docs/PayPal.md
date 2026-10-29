@@ -18,7 +18,7 @@ PayPal is a provider, not a chain or a currency. This page says what exists in t
 | PayPal code in `wallet.npm` | None. `new Wallet({ type: 'paypal' })` throws `Unsupported wallet type: paypal`, like any type that has no handler. |
 | PayPal code in `wallet.crate` | None. The Rust server only proxies EVM JSON-RPC. |
 | PayPal code in `wallet.pip` | None. The package is a stub. |
-| Demo UI | [Paypal .me](/.wallet/paypal/demos/split/): an entry form (text and receipt photo). It is UI only and sends nothing. |
+| Demo UI | [Paypal .me](/.wallet/paypal/split/): an entry form (text and receipt photo). It is UI only and sends nothing. |
 
 The existing wallet handlers are per chain (see [Wallet API](./Wallet-API.html) and [Status](./Status.html)). A PayPal provider does not map one to one onto that interface, and how it will be exposed has not been decided.
 
@@ -41,4 +41,4 @@ None of these steps is built. PayPal's REST APIs authenticate with a client ID a
 
 ## Demos
 
-[Paypal .me](/.wallet/paypal/demos/split/) was made for the PayPal AI hackathon. It is in development.
+[Paypal .me](/.wallet/paypal/split/) was made for the PayPal AI hackathon. It is in development.

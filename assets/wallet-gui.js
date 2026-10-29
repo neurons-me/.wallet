@@ -32,7 +32,7 @@
       return { label: txt(f.querySelector("label")), placeholder: f.querySelector("textarea").getAttribute("placeholder") || "", photo: txt(f.querySelector("[data-wallet-photo]")),
         photoLabel: f.querySelector("[data-wallet-photo]").getAttribute("aria-label") || "", go: txt(f.querySelector("[data-wallet-go]")) };
     })() : null,
-    // /.wallet/paypal/demos/split/ (#static-landing[data-layout=wallet-split]): the split app, then the planned plain-language entry (disabled)
+    // /.wallet/paypal/split/ (#static-landing[data-layout=wallet-split]): the split app, then the planned plain-language entry (disabled)
     split: SRC.dataset.layout === "wallet-split" ? (() => {
       const f = SRC.querySelector("[data-planned] [data-wallet-entry]");
       return { tag: txt(SRC.querySelector("[data-planned] .planned-tag")), label: txt(f.querySelector("label")), placeholder: f.querySelector("textarea").getAttribute("placeholder") || "",
@@ -216,7 +216,7 @@
           sx: { ml: "auto", textTransform: "none", borderRadius: "10px", px: 2, py: .75, flexShrink: 0, boxShadow: "none" } }, W.go)));
   }
 
-  // ── /.wallet/paypal/demos/split/: the split app over the .me model (assets/split/split-me.js). Every number shown is read from the kernel;
+  // ── /.wallet/paypal/split/: the split app over the .me model (assets/split/split-me.js). Every number shown is read from the kernel;
   //    the only JS arithmetic is the transfer suggestion (SplitMe.settle) and cents formatting. Starts empty: no example data. ──
   const inputSx = { font: "inherit", fontSize: 14, color: "inherit", bgcolor: "transparent", border: 1, borderColor: "divider", borderRadius: "8px", px: 1, py: .5, minWidth: 0, outline: 0, "&:focus": { borderColor: "primary.main" }, "&:disabled": { opacity: .5 } };
   const In = (props) => h(Box, { component: "input", ...props, sx: { ...inputSx, ...(props.sx || {}) } });
