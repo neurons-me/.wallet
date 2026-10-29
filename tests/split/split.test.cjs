@@ -99,3 +99,26 @@ test("inputs are checked", () => {
   assert.throws(() => s.addExpense({ currency: "EUR", paid: { ana: "1" }, split: ["ana"] }));
   assert.throws(() => s.addMember("Ana B", "x"));
 });
+
+// recordPayment: a captured provider payment (PayPal) written into .me; the kernel's nets recompute, idempotent per capture id
+test("recordPayment writes paid.<member> and settles the nets", () => {
+  const S = require("../../assets/split/split-me.js")(require("this.me"), { currency: "USD" });
+  S.addMember("ana", "Ana"); S.addMember("bo", "Bo"); S.addMember("cy", "Cy");
+  S.addExpense({ title: "dinner", paid: { ana: "30.00" }, split: ["ana", "bo", "cy"] });
+  assert.deepEqual(S.settle(), [{ from: "bo", to: "ana", cents: 1000 }, { from: "cy", to: "ana", cents: 1000 }]);
+  S.recordPayment("bo", "ana", 1000, "CAP777");
+  assert.equal(S.me("paid.bo"), 1000);
+  assert.equal(S.me("payments.CAP777.cents"), 1000);
+  assert.equal(S.balance("bo").net, 0);
+  assert.equal(S.check(), 0);
+  assert.deepEqual(S.settle(), [{ from: "cy", to: "ana", cents: 1000 }]);
+  S.recordPayment("bo", "ana", 1000, "CAP777"); // same capture again (webhook after capture): no double count
+  assert.equal(S.me("paid.bo"), 1000);
+  assert.equal(S.payments().length, 1);
+  S.recordPayment("cy", "ana", 400, "CAP8"); S.recordPayment("cy", "ana", 600, "CAP9");
+  assert.equal(S.paidOut("cy"), 1000);
+  assert.deepEqual(S.settle(), []);
+  assert.throws(() => S.recordPayment("bo", "bo", 1, "X"));
+  assert.throws(() => S.recordPayment("bo", "ana", 1.5, "X"));
+  assert.throws(() => S.recordPayment("zz", "ana", 1, "X"));
+});

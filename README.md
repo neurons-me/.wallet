@@ -52,6 +52,18 @@ Details in [Status](https://neurons-me.github.io/.wallet/docs/Status.html).
 
 **wallet.pip** — placeholder for a Python package.
 
+**PayPal provider** (`assets/providers/paypal/`, `tools/paypal-server.mjs`) — sandbox Orders v2 create / capture and verified webhooks, behind a local server that holds the credentials. Used by the [Split app](https://neurons-me.github.io/.wallet/paypal/split/). Setup in [PayPal](https://neurons-me.github.io/.wallet/docs/PayPal.html#setup-sandbox).
+
+### PayPal sandbox setup
+
+1. Create a sandbox REST app at developer.paypal.com and copy its client ID and secret.
+2. Put them in a git-ignored `.env` at the repo root:
+   `PAYPAL_CLIENT_ID=...`, `PAYPAL_CLIENT_SECRET=...`, and optionally `PAYPAL_WEBHOOK_ID=...` (plus `PAYPAL_ENV`, `PORT`, `PAYPAL_PUBLIC_BASE`).
+3. `node tools/paypal-server.mjs` (127.0.0.1:8788). The Split page then enables **Charge with PayPal** on each suggested transfer.
+4. Webhooks (optional): expose the server over HTTPS with a tunnel, register `https://<tunnel>/webhooks/paypal` for `PAYMENT.CAPTURE.COMPLETED` in the sandbox app, and set `PAYPAL_WEBHOOK_ID` to its ID.
+
+Tests, PayPal mocked: `node --test tests/paypal/paypal.test.mjs`.
+
 This repo uses a dot-prefixed name as a system-level module: `.me` is the identity layer, `.wallet` is the economy layer.
 
 ------

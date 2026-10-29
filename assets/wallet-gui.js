@@ -233,6 +233,22 @@
     const blank = () => ({ editing: null, title: "", paid: {}, inSplit: {}, weight: {}, weights: false });
     const [f, setF] = React.useState(blank);
     const [why, setWhy] = React.useState(null);
+    // the PayPal provider (assets/providers/paypal/paypal-provider.js + local tools/paypal-server.mjs): live only when the local
+    //   server answers /health with credentials, same pattern as the Meta slot; otherwise the charge buttons stay disabled.
+    const pp = React.useMemo(() => window.WalletPayPal ? window.WalletPayPal.client({ baseUrl: PAYPAL_URL }) : null, []);
+    const groupId = React.useMemo(() => "split-" + Math.random().toString(36).slice(2, 10), []);
+    const [ppSt, setPpSt] = React.useState({ live: false, tag: "PayPal · checking local server…" }), [ppMsg, setPpMsg] = React.useState(""), [ppBusy, setPpBusy] = React.useState(null);
+    React.useEffect(() => { if (!pp || !model) { setPpSt({ live: false, tag: "PayPal · provider not loaded" }); return; } let off = false;
+      pp.health().then((j) => !off && setPpSt(j.ok && j.configured ? { live: true, tag: "PayPal " + j.env + " via local server" } : { live: false, tag: "PayPal · local server has no credentials" }))
+        .catch(() => !off && setPpSt({ live: false, tag: "PayPal · off: run node tools/paypal-server.mjs locally" }));
+      const stop = pp.events((evt) => { if (evt.groupId !== groupId || !evt.member || !evt.to) return;
+        if (evt.currency !== model.currency) { setPpMsg("Capture in " + evt.currency + " ignored (group is " + model.currency + ")"); return; }
+        try { model.recordPayment(evt.member, evt.to, evt.amountCents, evt.captureId); setPpMsg("PayPal captured " + model.fmt(evt.amountCents) + " " + evt.currency + "; .me recomputed."); } catch (e) { setPpMsg(e.message); }
+        setPpBusy(null); bump((x) => x + 1); });
+      return () => { off = true; stop(); }; }, []);
+    const charge = async (t) => { if (!ppSt.live || ppBusy) return; setPpBusy(t.from + ">" + t.to); setPpMsg("");
+      try { await pp.charge({ member: t.from, to: t.to, amountCents: t.cents, currency: model.currency, groupId }); setPpMsg("Approve the payment in the PayPal window…"); }
+      catch (e) { setPpMsg(e.message); setPpBusy(null); } };
     if (!model) return Panel(id, "Split", Muted("The .me kernel did not load."));
     // the Meta slot (PlannedEntry) hands over validated, parsed expenses; .me computes everything from here
     window.__walletSplit = model;
@@ -302,12 +318,15 @@
         ].filter(Boolean)),
         h(Box, { sx: { gridColumn: "1 / -1", fontSize: 12, color: "text.secondary", mt: .5 } }, "Sum of nets: " + S.fmt(S.check()) + " " + cur)) : Muted("No expenses yet.")) : null;
     const transfers = exps.length ? Panel(id + ".transfers", "Suggested transfers",
-      moves.length ? h(Box, { sx: { display: "grid", gap: .5 } }, ...moves.map((t, i) => h(Box, { key: i, sx: { display: "flex", alignItems: "center", gap: 1, fontSize: 14 } }, h("span", null, nm[t.from]), h(Box, { component: "span", sx: { color: "text.secondary" } }, "→"), h("span", null, nm[t.to]), Num(money(t.cents), { ml: "auto" }))))
-        : Muted("Everyone is even."), h(Box, { component: "p", sx: { fontSize: 12, color: "text.secondary", m: 0, mt: 1 } }, "Nothing is sent from here.")) : null;
+      moves.length ? h(Box, { sx: { display: "grid", gap: .5 } }, ...moves.map((t, i) => h(Box, { key: i, sx: { display: "flex", alignItems: "center", gap: 1, fontSize: 14 } }, h("span", null, nm[t.from]), h(Box, { component: "span", sx: { color: "text.secondary" } }, "→"), h("span", null, nm[t.to]), Num(money(t.cents), { ml: "auto" }),
+        Btn({ disabled: !ppSt.live || !!ppBusy, onClick: () => charge(t), "data-gui-node-id": id + ".transfers." + t.from + "." + t.to + ".paypal", title: ppSt.tag }, ppBusy === t.from + ">" + t.to ? "Waiting for PayPal…" : "Charge with PayPal"))))
+        : Muted("Everyone is even."), h(Box, { component: "p", sx: { fontSize: 12, color: "text.secondary", m: 0, mt: 1 } }, ppSt.live ? ppSt.tag + " · sandbox orders; a capture is written to .me as paid." : ppSt.tag + " · nothing is sent from here."),
+        ppMsg && h(Box, { component: "p", role: "status", sx: { fontSize: 13, color: "text.secondary", m: 0, mt: .5 } }, ppMsg)) : null;
     return h(Box, { "data-gui-node-id": id }, members, form, list, balances, transfers);
   }
   // the plain-language entry: live only when the local Meta parse server (tools/meta-parse-server.mjs) answers /health with a key;
   //   otherwise it stays disabled with an honest label. The model only parses; the key never reaches the page.
+  const PAYPAL_URL = (window.__walletPayPalUrl || "http://127.0.0.1:8788").replace(/\/$/, "");
   const META_URL = (window.__walletMetaParseUrl || "http://127.0.0.1:8787").replace(/\/$/, "");
   function PlannedEntry(p) {
     const W = page.split, id = p["data-gui-node-id"];

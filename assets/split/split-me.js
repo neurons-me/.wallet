@@ -36,6 +36,7 @@
   const expenses = []; // ids in creation order
   const exMeta = {};
   let seq = 0;
+  const payments = {}, paidOut = {}; // recordPayment: ref -> payment, member -> cents paid through a provider
   const ID = /^[a-z][a-z0-9]*$/;
 
   const P = (e, m, f) => `ex[${e}].parts[${m}].${f}`;
@@ -131,6 +132,26 @@
       expenses.splice(i, 1); delete exMeta[e];
       me["-"](`ex.${e}`);
     },
+    // a settled payment (e.g. a captured PayPal order): writes paid.<from> (cumulative cents paid out through the provider) and
+    // payments.<ref>, and adds a settlement entry (from paid `cents`, `to` takes all of it) so the kernel's nets recompute.
+    // Idempotent per ref (a capture can arrive from the capture call, the return page and the webhook).
+    recordPayment(from, to, cents, ref) {
+      if (!names[from]) throw new Error("unknown member " + from);
+      if (!names[to]) throw new Error("unknown member " + to);
+      if (from === to) throw new Error("a payment needs two different members");
+      if (!Number.isSafeInteger(cents) || cents <= 0) throw new Error("cents must be a positive integer");
+      const key = String(ref || "").replace(/[^A-Za-z0-9]/g, "");
+      if (!key) throw new Error("a payment needs a reference (e.g. the capture id)");
+      if (payments[key]) return payments[key].expense;
+      const e = api.addExpense({ title: "PayPal " + names[from] + " → " + names[to] + " (" + key + ")", paid: { [from]: cents }, split: [to] });
+      paidOut[from] = (paidOut[from] || 0) + cents;
+      me.paid[from](paidOut[from]);
+      me.payments[key].from(from); me.payments[key].to(to); me.payments[key].cents(cents); me.payments[key].expense(e);
+      payments[key] = { from, to, cents, expense: e };
+      return e;
+    },
+    payments: () => Object.entries(payments).map(([ref, x]) => ({ ref, ...x })),
+    paidOut: (m) => me(`paid.${m}`),
     // cents; undefined from the kernel means there is no expense yet (an empty [] aggregate is undefined, not 0)
     balance(m) { return { paid: me(`members.${m}.paid`), owed: me(`members.${m}.owed`), net: me(`members.${m}.net`) }; },
     balances() { return members.map((m) => ({ id: m, name: names[m], ...api.balance(m) })); },
