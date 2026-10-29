@@ -237,6 +237,7 @@
     //   server answers /health with credentials, same pattern as the Meta slot; otherwise the charge buttons stay disabled.
     const pp = React.useMemo(() => window.WalletPayPal ? window.WalletPayPal.client({ baseUrl: PAYPAL_URL }) : null, []);
     const groupId = React.useMemo(() => "split-" + Math.random().toString(36).slice(2, 10), []);
+    const [ethNet, setEthNet] = React.useState("mainnet"), [ethRate, setEthRate] = React.useState(""), [ethAmt, setEthAmt] = React.useState({}), [ethMsg, setEthMsg] = React.useState("");
     const [ppSt, setPpSt] = React.useState({ live: false, tag: "PayPal · checking local server…" }), [ppMsg, setPpMsg] = React.useState(""), [ppBusy, setPpBusy] = React.useState(null);
     React.useEffect(() => { if (!pp || !model) { setPpSt({ live: false, tag: "PayPal · provider not loaded" }); return; } let off = false;
       pp.health().then((j) => !off && setPpSt(j.ok && j.configured ? { live: true, tag: "PayPal " + j.env + " via local server" } : { live: false, tag: "PayPal · local server has no credentials" }))
@@ -274,7 +275,11 @@
       h(Box, { component: "form", onSubmit: addMember, sx: { display: "flex", gap: 1 } },
         In({ value: name, onChange: (e) => setName(e.target.value), placeholder: "Name", "aria-label": "Member name", "data-gui-node-id": id + ".members.name", sx: { flex: 1 } }),
         Btn({ type: "submit", "data-gui-node-id": id + ".members.add" }, "+ Add")),
-      mem.length ? h(Box, { sx: { display: "flex", flexWrap: "wrap", gap: .75, mt: 1.25 } }, ...mem.map((m) => h(Box, { key: m.id, component: "span", sx: { fontFamily: MONO, fontSize: 13, border: 1, borderColor: "divider", borderRadius: "999px", px: 1.25, py: .25 } }, m.name))) : null);
+      mem.length ? h(Box, { sx: { display: "flex", flexWrap: "wrap", gap: .75, mt: 1.25 } }, ...mem.map((m) => h(Box, { key: m.id, component: "span", sx: { fontFamily: MONO, fontSize: 13, border: 1, borderColor: "divider", borderRadius: "999px", px: 1.25, py: .25 } }, m.name))) : null,
+      mem.length && window.SettleMethods && window.SettleMethods.pick(S.method()) === "eth" ? h(Box, { sx: { display: "grid", gridTemplateColumns: "minmax(0,auto) minmax(0,1fr)", columnGap: 1, rowGap: .75, alignItems: "center", mt: 1.25, fontSize: 14 } },
+        ...mem.flatMap((m) => { const a = S.ethAddress(m.id); return [h("span", { key: m.id + "l" }, m.name),
+          In({ key: m.id + "a", defaultValue: a, onBlur: (e) => tryDo(() => S.setEthAddress(m.id, e.target.value)), placeholder: "0x… address (optional)", spellCheck: false, "aria-label": m.name + " ETH address", "data-gui-node-id": id + ".members." + m.id + ".eth",
+            sx: { fontFamily: MONO, fontSize: 12, width: "100%", borderColor: a && !window.SettleMethods.isAddress(a) ? "error.main" : "divider" } })]; })) : null);
     const form = mem.length ? Panel(id + ".expense", f.editing ? "Edit expense" : "Add expense",
       h(Box, { component: "form", onSubmit: submit },
         In({ value: f.title, onChange: (e) => setF({ ...f, title: e.target.value }), placeholder: "What for", "aria-label": "What for", "data-gui-node-id": id + ".expense.title", sx: { width: "100%", mb: 1.25 } }),
@@ -317,11 +322,39 @@
           why === b.id ? h(React.Fragment, { key: b.id + "x" }, whyBox(b.id)) : null,
         ].filter(Boolean)),
         h(Box, { sx: { gridColumn: "1 / -1", fontSize: 12, color: "text.secondary", mt: .5 } }, "Sum of nets: " + S.fmt(S.check()) + " " + cur)) : Muted("No expenses yet.")) : null;
-    const transfers = exps.length ? Panel(id + ".transfers", "Suggested transfers",
-      moves.length ? h(Box, { sx: { display: "grid", gap: .5 } }, ...moves.map((t, i) => h(Box, { key: i, sx: { display: "flex", alignItems: "center", gap: 1, fontSize: 14 } }, h("span", null, nm[t.from]), h(Box, { component: "span", sx: { color: "text.secondary" } }, "→"), h("span", null, nm[t.to]), Num(money(t.cents), { ml: "auto" }),
-        Btn({ disabled: !ppSt.live || !!ppBusy, onClick: () => charge(t), "data-gui-node-id": id + ".transfers." + t.from + "." + t.to + ".paypal", title: ppSt.tag }, ppBusy === t.from + ">" + t.to ? "Waiting for PayPal…" : "Charge with PayPal"))))
-        : Muted("Everyone is even."), h(Box, { component: "p", sx: { fontSize: 12, color: "text.secondary", m: 0, mt: 1 } }, ppSt.live ? ppSt.tag + " · sandbox orders; a capture is written to .me as paid." : ppSt.tag + " · nothing is sent from here."),
-        ppMsg && h(Box, { component: "p", role: "status", sx: { fontSize: 13, color: "text.secondary", m: 0, mt: .5 } }, ppMsg)) : null;
+    // settlement method (assets/split/settle-methods.js), stored in .me as settle.method
+    const SM = window.SettleMethods, method = SM ? SM.pick(S.method()) : "paypal";
+    const setMethod = (v) => { if (SM && SM.pick(v) === v) { S.setMethod(v); setEthMsg(""); redraw(); } };
+    const nw = SM ? SM.network(ethNet) : null, eKey = (t) => t.from + ">" + t.to;
+    const ethWei = (t) => { const v = (ethAmt[eKey(t)] || "").trim(); try { return v ? SM.toWei(v) : (ethRate.trim() ? SM.weiFromRate(t.cents, ethRate) : null); } catch (e) { return e; } };
+    const sendEth = async (t, wei) => { const eth = window.ethereum; if (!eth) return; setEthMsg("");
+      try { if (nw) { const c = await eth.request({ method: "eth_chainId" }); if (parseInt(c, 16) !== nw.chainId) throw new Error("Switch your wallet to " + nw.name + " (chain " + nw.chainId + ")."); }
+        const [from] = await eth.request({ method: "eth_requestAccounts" });
+        const hash = await eth.request({ method: "eth_sendTransaction", params: [SM.txRequest(from, S.ethAddress(t.to), wei)] });
+        setEthMsg("Sent: " + hash + ". Not written to .me; check it on the explorer."); } catch (e) { setEthMsg(e.message || String(e)); } };
+    const methodSel = SM ? h(Box, { sx: { display: "flex", alignItems: "center", gap: 1, mb: 1.25, flexWrap: "wrap" } },
+      h(Box, { component: "label", htmlFor: "split-settle-method", sx: { fontSize: 12, color: "text.secondary" } }, "Settle with"),
+      h(Box, { component: "select", id: "split-settle-method", value: method, onChange: (e) => setMethod(e.target.value), "data-gui-node-id": id + ".settle.method", sx: { ...inputSx, "& option": { bgcolor: "background.paper", color: "text.primary" } } },
+        ...SM.METHODS.map((m) => h("option", { key: m.id, value: m.id, disabled: !m.available }, m.available ? m.label : m.label + " · Coming soon"))),
+      method === "eth" ? h(Box, { component: "select", value: ethNet, onChange: (e) => setEthNet(e.target.value), "aria-label": "Network", "data-gui-node-id": id + ".settle.network", sx: { ...inputSx, "& option": { bgcolor: "background.paper", color: "text.primary" } } },
+        ...SM.NETWORKS.map((n) => h("option", { key: n.id, value: n.id }, n.name + " · " + n.chainId))) : null,
+      method === "eth" ? In({ value: ethRate, onChange: (e) => setEthRate(e.target.value), placeholder: cur + " per 1 " + nw.symbol + " (optional)", inputMode: "decimal", "aria-label": cur + " per 1 " + nw.symbol, "data-gui-node-id": id + ".settle.rate", sx: { width: 190 } }) : null) : null;
+    const ethRow = (t) => { const to = S.ethAddress(t.to), wei = ethWei(t), ok = typeof wei === "bigint" && SM.isAddress(to), link = ok ? SM.eip681(to, nw.chainId, wei) : "";
+      return h(Box, { sx: { display: "grid", gap: .5, pl: 1, borderLeft: 1, borderColor: "divider", mb: .75, fontSize: 13 } },
+        h(Box, { sx: { display: "flex", gap: 1, flexWrap: "wrap", alignItems: "center" } },
+          In({ value: ethAmt[eKey(t)] || "", onChange: (e) => setEthAmt({ ...ethAmt, [eKey(t)]: e.target.value }), placeholder: typeof wei === "bigint" && !(ethAmt[eKey(t)] || "").trim() ? SM.fromWei(wei) : nw.symbol + " amount", inputMode: "decimal", "aria-label": nw.symbol + " amount", "data-gui-node-id": id + ".transfers." + t.from + "." + t.to + ".ethamount", sx: { width: 150 } }),
+          ok ? h(Box, { component: "a", href: link, sx: { fontFamily: MONO, fontSize: 12, color: "text.primary", wordBreak: "break-all" } }, "Open payment link") : null,
+          ok && window.ethereum ? Btn({ onClick: () => sendEth(t, wei), "data-gui-node-id": id + ".transfers." + t.from + "." + t.to + ".eth" }, "Send with wallet") : null),
+        h(Box, { component: "span", sx: { color: "text.secondary", fontSize: 12, fontFamily: ok ? MONO : "inherit", wordBreak: "break-all" } },
+          !SM.isAddress(to) ? "Needs " + nm[t.to] + "'s " + nw.symbol + " address (Members)." : wei instanceof Error ? wei.message : wei === null ? "Enter the " + nw.symbol + " amount, or a rate above." : link)); };
+    const transfers = exps.length ? Panel(id + ".transfers", "Suggested transfers", methodSel,
+      moves.length ? h(Box, { sx: { display: "grid", gap: .5 } }, ...moves.map((t, i) => h(React.Fragment, { key: i }, h(Box, { sx: { display: "flex", alignItems: "center", gap: 1, fontSize: 14 } }, h("span", null, nm[t.from]), h(Box, { component: "span", sx: { color: "text.secondary" } }, "→"), h("span", null, nm[t.to]), Num(money(t.cents), { ml: "auto" }),
+        method === "paypal" ? Btn({ disabled: !ppSt.live || !!ppBusy, onClick: () => charge(t), "data-gui-node-id": id + ".transfers." + t.from + "." + t.to + ".paypal", title: ppSt.tag }, ppBusy === t.from + ">" + t.to ? "Waiting for PayPal…" : "Charge with PayPal") : null),
+        method === "eth" ? ethRow(t) : null)))
+        : Muted("Everyone is even."), method === "paypal" ? h(Box, { component: "p", sx: { fontSize: 12, color: "text.secondary", m: 0, mt: 1 } }, ppSt.live ? ppSt.tag + " · sandbox orders; a capture is written to .me as paid." : ppSt.tag + " · nothing is sent from here.")
+        : h(Box, { component: "p", sx: { fontSize: 12, color: "text.secondary", m: 0, mt: 1 } }, "No built-in rate. Each receiver needs an address. Payments sent this way are not recorded in .me." + (window.ethereum ? "" : " No browser wallet found; use the link.")),
+        method === "paypal" && ppMsg && h(Box, { component: "p", role: "status", sx: { fontSize: 13, color: "text.secondary", m: 0, mt: .5 } }, ppMsg),
+        method === "eth" && ethMsg && h(Box, { component: "p", role: "status", sx: { fontSize: 13, color: "text.secondary", m: 0, mt: .5, wordBreak: "break-all" } }, ethMsg)) : null;
     return h(Box, { "data-gui-node-id": id }, members, form, list, balances, transfers);
   }
   // the plain-language entry: live only when the local Meta parse server (tools/meta-parse-server.mjs) answers /health with a key;

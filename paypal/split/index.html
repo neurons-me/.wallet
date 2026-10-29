@@ -40,8 +40,9 @@
   <script src="https://cdn.jsdelivr.net/npm/this.gui@4.2.1/dist/this.gui.umd.js" integrity="sha384-hMM5lKGHIJVSKMQgLKFJCTZNMwCQ7XHWcMHCiiTwDFzA0a2q4p0crD/NyA9Pg7wb" crossorigin="anonymous"></script>
   <!-- The split model: a .me kernel (this.me@4.2.1, UMD global Me) and the rules in /.wallet/assets/split/split-me.js (window.SplitMe). -->
   <script src="https://cdn.jsdelivr.net/npm/this.me@4.2.1/dist/me.umd.js" integrity="sha384-ElnWCZOb324gqFJ2M/Fxy4CZ6Si131WIbR54iYomzEbTloUDLfBzZ05qi1nZ7+4G" crossorigin="anonymous"></script>
-  <script src="/.wallet/assets/split/split-me.js?v=1"></script>
+  <script src="/.wallet/assets/split/split-me.js?v=2"></script>
   <script src="/.wallet/assets/split/meta-parse.js?v=1"></script>
+  <script src="/.wallet/assets/split/settle-methods.js?v=1"></script>
   <!-- The PayPal provider layer of .wallet (window.WalletPayPal): talks only to the local tools/paypal-server.mjs; no credentials on the page. -->
   <script src="/.wallet/assets/providers/paypal/paypal-provider.js?v=1"></script>
   <!-- Static page styles, off once .GUI has rendered (html.gui-on). -->
@@ -103,6 +104,6 @@
   </main>
 </div>
 <div id="root"></div>
-<script src="/.wallet/assets/wallet-gui.js?v=7" onerror="document.documentElement.classList.remove('gui-boot')"></script>
+<script src="/.wallet/assets/wallet-gui.js?v=8" onerror="document.documentElement.classList.remove('gui-boot')"></script>
 </body>
 </html>

@@ -150,6 +150,12 @@
       payments[key] = { from, to, cents, expense: e };
       return e;
     },
+    // settle.method: how transfers are settled ("paypal" | "eth"; see settle-methods.js). members.<m>.eth: optional receiver
+    // address, stored without its "0x" (this.me@4.2.1 reads a "0x…" string as null) and returned with it.
+    setMethod(m) { me.settle.method(String(m)); return m; },
+    method: () => me("settle.method"),
+    setEthAddress(m, addr) { if (!names[m]) throw new Error("unknown member " + m); me.members[m].eth(String(addr || "").trim().replace(/^0x/i, "")); },
+    ethAddress: (m) => { const v = me(`members.${m}.eth`); return v ? "0x" + v : ""; },
     payments: () => Object.entries(payments).map(([ref, x]) => ({ ref, ...x })),
     paidOut: (m) => me(`paid.${m}`),
     // cents; undefined from the kernel means there is no expense yet (an empty [] aggregate is undefined, not 0)
