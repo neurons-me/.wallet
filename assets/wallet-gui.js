@@ -1,4 +1,4 @@
-// .GUI (this.gui@4.2.1, which has G.QRme) for the two pages of the .wallet site: the landing (/.wallet/, a card per currency) and /.wallet/paypal/.
+// .GUI for .wallet pages: existing pages pin 4.2.1; the PayPal surface pins published 4.3.0 for GUI.LLMS.
 // Self-contained: the same topbar as the neurons-me docs (me:// path, search, Docs, GitHub, theme picker, light/dark, gear) plus Cleaker's compact QRme.
 // The page's own static markup (#static-landing) is the single source of text, links and images: this script reads it, renders the same content
 // through GUI.mount, then removes the static copy. Without JS or if the CDN fails, the static page stays as it is.
@@ -20,14 +20,15 @@
   const path = [...SRC.querySelectorAll(".mepath > a, .mepath > .here")].map((e) => ({ text: txt(e), href: e.getAttribute("href"), title: e.getAttribute("title") || txt(e) }));
   const header = SRC.querySelector("header");
   const page = {
+    paypal: SRC.dataset.layout === "wallet-paypal",
     path, docs: SRC.querySelector(".topnav .act")?.getAttribute("href"), github: SRC.querySelector(".topnav .gh")?.getAttribute("href"),
     h1: txt(header.querySelector("h1")), lead: txt(header.querySelector(".lead")),
     // a small caption under the entry (.note), when the page has one
     note: txt(SRC.querySelector("main > .note")),
     // /.wallet/paypal/ and /.wallet/paypal/demos/ (#static-landing[data-layout=wallet-cards]): one card each (.card: .t title, .d line, .tag)
     cards: SRC.dataset.layout === "wallet-cards" ? [...SRC.querySelectorAll(".cards > .card")].map((c) => ({ href: c.getAttribute("href") || "", title: txt(c.querySelector(".t")), desc: txt(c.querySelector(".d")), tag: txt(c.querySelector(".tag")) })) : null,
-    // /.wallet/paypal/ (#static-landing[data-layout=wallet-paypal]): the entry's own labels come from the static form, like every other text here
-    wallet: SRC.dataset.layout === "wallet-paypal" ? (() => {
+    // Legacy plain-language entry (wallet-paypal-entry), separate from the live wallet-paypal provider surface
+    wallet: SRC.dataset.layout === "wallet-paypal-entry" ? (() => {
       const f = SRC.querySelector("[data-wallet-entry]");
       return { label: txt(f.querySelector("label")), placeholder: f.querySelector("textarea").getAttribute("placeholder") || "", photo: txt(f.querySelector("[data-wallet-photo]")),
         photoLabel: f.querySelector("[data-wallet-photo]").getAttribute("aria-label") || "", go: txt(f.querySelector("[data-wallet-go]")) };
@@ -42,7 +43,7 @@
     groups: SRC.dataset.layout === "wallet-landing" ? [...SRC.querySelectorAll(".group")].map((g) => ({ label: txt(g.querySelector(".group-label")),
       coins: [...g.querySelectorAll(".coin")].map((c) => ({ href: c.getAttribute("href") || "", name: txt(c.querySelector(".name")), tag: txt(c.querySelector(".tag")), src: c.querySelector("img").getAttribute("src") })) })) : null,
   };
-  page.walletQR = !!(page.wallet || page.groups || page.cards || page.split);
+  page.walletQR = !!(page.paypal || page.wallet || page.groups || page.cards || page.split);
 
   // ── icons: inline SVG (no icon font) ──
   const ICONS = {
@@ -455,7 +456,14 @@
       ].filter(Boolean)),
     ]),
   ]);
-  const spec = page.split ? walletSplitSpec() : page.groups ? walletLandingSpec() : page.cards ? walletCardsSpec() : walletSpec();
+  const PayPalSurface = page.paypal && window.WalletPayPalGUI ? window.WalletPayPalGUI(G, React) : () => h("p", null, "PayPal surface did not load. Reload to try again.");
+  const walletPayPalSpec = () => N("Box", { sx: { minHeight: "100vh", bgcolor: "background.default", color: "text.primary", lineHeight: 1.6 } }, [
+    N("LandingTopBar", { "data-gui-node-id": L + ".bars.top" }),
+    N("Box", { component: "main", sx: { maxWidth: 1280, mx: "auto", px: { xs: 2, sm: 3 }, pt: { xs: 4, sm: 6 }, pb: 10 } }, [
+      N("PayPalSurface", { "data-gui-node-id": LC + ".paypal" }),
+    ]),
+  ]);
+  const spec = page.paypal ? walletPayPalSpec() : page.split ? walletSplitSpec() : page.groups ? walletLandingSpec() : page.cards ? walletCardsSpec() : walletSpec();
 
   // ── theme (page-scoped keys from window.__thisGuiThemeScope; neurons.me, dark by default) + mount ──
   const scope = window.__thisGuiThemeScope || {};
@@ -464,7 +472,7 @@
   const INSPECTOR_ON = params.get("inspector") === "1";
   if (G.getInspectorEnabled() !== INSPECTOR_ON) G.setInspectorEnabled(INSPECTOR_ON);
   G.mount(spec, ROOT, {
-    gui: { ...G, Theme: PageTheme, registry: { ...(G.Registry || G.registry), LandingTopBar, WalletEntry, SplitApp, PlannedEntry } },
+    gui: { ...G, Theme: PageTheme, registry: { ...(G.Registry || G.registry), LandingTopBar, WalletEntry, SplitApp, PlannedEntry, PayPalSurface } },
     devtools: { enabled: true, inspector: INSPECTOR_ON, adminView: false, inspectorToggleVisible: false },
   });
   html.classList.add("gui-on");

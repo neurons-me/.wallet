@@ -1,0 +1,237 @@
+{
+  "namespace": "wallet.paypal",
+  "source": "Mapped from this.wallet PayPal provider (paypal-provider.js, tools/paypal-server.mjs) plus official PayPal REST paths. Only wired endpoints are usable; planned rows are documented but not called.",
+  "notes": [
+    "Public face is wallet.paypal (PayPal as a provider inside .wallet). Never me.paypal or Paypal .me.",
+    ".me does the accounting. PayPal closes an already-expressed amount; it does not compute bills.",
+    "wallet.paypal.operators.pay is the high-level call that closes an expressed amount. It uses the wired order endpoints underneath.",
+    "Split, sum and divide stay as .me '=' expressions, not PayPal operators.",
+    "PayPal hosts: https://api-m.sandbox.paypal.com (sandbox, default) and https://api-m.paypal.com (live).",
+    "PayPal's Log in with PayPal guide and the Identity v1 API spec name two different userinfo paths. They are mapped separately and are not treated as interchangeable.",
+    "A future .GUI PayPal form component should read this file.",
+    "A completed capture issues wallet.paypal.receipts[id] and a wallet.paypal.conversation message. Share uses that record."
+  ],
+  "endpoints": [
+    {
+      "id": "operators.pay",
+      "me": "wallet.paypal.operators.pay",
+      "kind": "composed",
+      "status": "wired",
+      "role": "Close an already-expressed .me amount: create an order, open PayPal approval, write the capture back to .me.",
+      "uses": [
+        "orders.create",
+        "orders.capture"
+      ],
+      "client": "WalletPayPal.client().charge()",
+      "localPath": "POST /orders then GET /return or POST /orders/:id/capture",
+      "fields": [
+        {
+          "name": "member",
+          "required": true,
+          "notes": "Payer id (letters, digits, _ . -)"
+        },
+        {
+          "name": "groupId",
+          "required": true,
+          "notes": "Group / context id"
+        },
+        {
+          "name": "amountCents",
+          "required": true,
+          "notes": "Positive integer cents already expressed in .me / .wallet"
+        },
+        {
+          "name": "currency",
+          "required": false,
+          "notes": "3-letter ISO code; default USD"
+        },
+        {
+          "name": "to",
+          "required": false,
+          "notes": "Recipient member id"
+        },
+        {
+          "name": "description",
+          "required": false,
+          "notes": "At most 120 characters"
+        },
+        {
+          "name": "payeeEmail",
+          "required": false,
+          "notes": "Pay a member's own PayPal account; otherwise the app's business account receives the funds"
+        }
+      ]
+    },
+    {
+      "id": "oauth.token",
+      "me": "wallet.paypal.oauth.token",
+      "kind": "paypal",
+      "method": "POST",
+      "paypalPath": "/v1/oauth2/token",
+      "paypalHost": "api-m.sandbox.paypal.com | api-m.paypal.com",
+      "docs": "https://developer.paypal.com/api/rest/authentication/",
+      "status": "wired",
+      "grant": "client_credentials",
+      "role": "Server-side client-credentials access token. Credentials stay in tools/paypal-server.mjs; the page never sees them."
+    },
+    {
+      "id": "oauth.token.authorization_code",
+      "me": "wallet.paypal.oauth.token",
+      "kind": "paypal",
+      "method": "POST",
+      "paypalPath": "/v1/oauth2/token",
+      "paypalHost": "api-m.sandbox.paypal.com | api-m.paypal.com",
+      "docs": "https://developer.paypal.com/docs/log-in-with-paypal/integrate/",
+      "status": "planned",
+      "grant": "authorization_code",
+      "role": "Exchange a Log in with PayPal authorization code for a user access token. Same HTTP path as oauth.token, different grant. Not wired."
+    },
+    {
+      "id": "oauth.token.refresh",
+      "me": "wallet.paypal.oauth.token",
+      "kind": "paypal",
+      "method": "POST",
+      "paypalPath": "/v1/oauth2/token",
+      "paypalHost": "api-m.sandbox.paypal.com | api-m.paypal.com",
+      "docs": "https://developer.paypal.com/docs/log-in-with-paypal/integrate/",
+      "status": "planned",
+      "grant": "refresh_token",
+      "role": "Refresh a Log in with PayPal user access token. Same HTTP path as oauth.token, different grant. Not wired."
+    },
+    {
+      "id": "orders.create",
+      "me": "wallet.paypal.orders",
+      "kind": "paypal",
+      "method": "POST",
+      "paypalPath": "/v2/checkout/orders",
+      "paypalHost": "api-m.sandbox.paypal.com | api-m.paypal.com",
+      "docs": "https://developer.paypal.com/api/orders/v2/",
+      "localPath": "POST /orders",
+      "client": "WalletPayPal.client().createOrder()",
+      "status": "wired",
+      "role": "Create a checkout order (intent CAPTURE) from an already-expressed amount. custom_id carries group, member and recipient.",
+      "fields": [
+        {
+          "name": "member",
+          "required": true
+        },
+        {
+          "name": "groupId",
+          "required": true
+        },
+        {
+          "name": "amountCents",
+          "required": true,
+          "notes": "Integer cents; converted to PayPal's decimal string only at this boundary"
+        },
+        {
+          "name": "currency",
+          "required": false,
+          "notes": "Default USD; JPY, HUF, TWD must be whole units"
+        },
+        {
+          "name": "to",
+          "required": false
+        },
+        {
+          "name": "description",
+          "required": false
+        },
+        {
+          "name": "payeeEmail",
+          "required": false
+        }
+      ]
+    },
+    {
+      "id": "orders.capture",
+      "me": "wallet.paypal.orders[id].capture",
+      "kind": "paypal",
+      "method": "POST",
+      "paypalPath": "/v2/checkout/orders/{id}/capture",
+      "paypalHost": "api-m.sandbox.paypal.com | api-m.paypal.com",
+      "docs": "https://developer.paypal.com/api/orders/v2/",
+      "localPath": "POST /orders/:id/capture (also triggered by GET /return)",
+      "client": "WalletPayPal.client().capture()",
+      "status": "wired",
+      "role": "Capture an approved order. The capture event is written back to .me (paid.<member>, payments.<captureId>)."
+    },
+    {
+      "id": "webhooks.verify",
+      "me": "wallet.paypal.webhooks.verify",
+      "kind": "paypal",
+      "method": "POST",
+      "paypalPath": "/v1/notifications/verify-webhook-signature",
+      "paypalHost": "api-m.sandbox.paypal.com | api-m.paypal.com",
+      "docs": "https://developer.paypal.com/docs/api/webhooks/v1/#verify-webhook-signature_post",
+      "localPath": "POST /webhooks/paypal",
+      "status": "wired",
+      "role": "Verify a PayPal webhook. On PAYMENT.CAPTURE.COMPLETED, emit the same capture event (once per capture id)."
+    },
+    {
+      "id": "account",
+      "me": "wallet.paypal.account",
+      "kind": "paypal",
+      "method": "GET",
+      "paypalPath": "/v1/identity/oauth2/userinfo",
+      "paypalHost": "api-m.sandbox.paypal.com | api-m.paypal.com",
+      "docs": "https://developer.paypal.com/docs/log-in-with-paypal/integrate/",
+      "status": "planned",
+      "role": "Log in with PayPal user profile, as named in the official integrate guide (go-live userinfo URL). Returned fields depend on consented scopes. Not a generic account-management API. Not wired."
+    },
+    {
+      "id": "account.userinfo",
+      "me": "wallet.paypal.account.userinfo",
+      "kind": "paypal",
+      "method": "GET",
+      "paypalPath": "/v1/identity/openidconnect/userinfo",
+      "paypalHost": "api-m.sandbox.paypal.com | api-m.paypal.com",
+      "docs": "https://developer.paypal.com/api/identity/v1/userinfo-get",
+      "status": "planned",
+      "role": "OpenID Connect userinfo from the Identity v1 API spec. This is a different path than /v1/identity/oauth2/userinfo; they are not interchangeable. Returned fields depend on consented scopes. Not wired."
+    },
+    {
+      "id": "health",
+      "me": "wallet.paypal.health",
+      "kind": "local",
+      "method": "GET",
+      "localPath": "GET /health",
+      "client": "WalletPayPal.client().health()",
+      "status": "wired",
+      "role": "Local server status: { ok, provider, env, configured, webhookConfigured }. Never returns credential values."
+    },
+    {
+      "id": "events",
+      "me": "wallet.paypal.events",
+      "kind": "local",
+      "method": "GET",
+      "localPath": "GET /events",
+      "client": "WalletPayPal.client().events(onCapture)",
+      "status": "wired",
+      "role": "Local SSE stream. Event name capture: { orderId, captureId, status, amountCents, currency, groupId, member, to }."
+    },
+    {
+      "id": "return",
+      "me": "wallet.paypal.return",
+      "kind": "local",
+      "method": "GET",
+      "localPath": "GET /return?token=<orderId>",
+      "status": "wired",
+      "role": "PayPal return_url after approval. Captures the order and closes the popup."
+    },
+    {
+      "id": "receipts",
+      "me": "wallet.paypal.receipts",
+      "kind": "composed",
+      "status": "wired",
+      "role": "Receipt issued when PayPal captures an order. Built from the capture written back to .me (order id, capture id, amount, parties, time). Not a separate PayPal PDF API; PayPal closes the amount and this receipt is that record."
+    },
+    {
+      "id": "conversation",
+      "me": "wallet.paypal.conversation",
+      "kind": "composed",
+      "status": "wired",
+      "role": "Messages for this provider session. A completed capture posts a receipt message here so the conversation and the graph show the same issued receipt."
+    }
+  ]
+}

@@ -5,11 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="theme-color" content="#0b0b0f" />
   <title>PayPal · .wallet</title>
-  <meta name="description" content="PayPal as a provider for .wallet: split, sum, divide or pay. .me computes the numbers." />
+  <meta name="description" content="PayPal as a provider for .wallet." />
   <link rel="canonical" href="https://neurons-me.github.io/.wallet/paypal/" />
   <link rel="icon" type="image/png" href="https://res.cloudinary.com/dkwnxf6gm/image/upload/v1760629064/neurons.me_b50f6a.png" />
   <meta property="og:title" content="PayPal provider for .wallet" />
-  <meta property="og:description" content="PayPal as a provider for .wallet: split, sum, divide or pay. .me computes the numbers." />
+  <meta property="og:description" content="PayPal as a provider for .wallet." />
   <meta property="og:url" content="https://neurons-me.github.io/.wallet/paypal/" />
   <meta property="og:type" content="website" />
   <meta property="og:image" content="https://neurons-me.github.io/.wallet/assets/og/paypal-og.png" />
@@ -19,10 +19,10 @@
   <meta property="og:image:alt" content="PayPal provider for .wallet" />
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="PayPal provider for .wallet" />
-  <meta name="twitter:description" content="PayPal as a provider for .wallet: split, sum, divide or pay. .me computes the numbers." />
+  <meta name="twitter:description" content="PayPal as a provider for .wallet." />
   <meta name="twitter:image" content="https://neurons-me.github.io/.wallet/assets/og/paypal-og.png" />
   <meta name="twitter:image:alt" content="PayPal provider for .wallet" />
-  <!-- .GUI (this.gui@4.2.1, which has G.QRme) renders this page from the static markup below (/.wallet/assets/wallet-gui.js, the same topbar as the neurons-me docs); the static page stays as the no-JS / CDN-failure fallback.
+  <!-- .GUI (this.gui@4.3.0, with G.QRme and GUI.LLMS) renders this page from the static markup below (/.wallet/assets/wallet-gui.js, the same topbar as the neurons-me docs); the static page stays as the no-JS / CDN-failure fallback.
        Same page-scoped theme keys as the docs (me-docs), neurons.me, dark by default, so the light / dark choice carries across them. -->
   <script>
     window.__thisGuiThemeScope = { scopeId: "me-docs", themeModeKey: "me-docs.themeMode", themeIdKey: "me-docs.themeId", defaultMode: "dark" };
@@ -37,7 +37,11 @@
   <!-- Pinned dependencies (jsDelivr, exact versions, Subresource Integrity). -->
   <script src="https://cdn.jsdelivr.net/npm/react@18.3.1/umd/react.production.min.js" integrity="sha384-DGyLxAyjq0f9SPpVevD6IgztCFlnMF6oW/XQGmfe+IsZ8TqEiDrcHkMLKI6fiB/Z" crossorigin="anonymous"></script>
   <script src="https://cdn.jsdelivr.net/npm/react-dom@18.3.1/umd/react-dom.production.min.js" integrity="sha384-gTGxhz21lVGYNMcdJOyq01Edg0jhn/c22nsx0kyqP0TxaV5WVdsSH1fSDUf5YJj1" crossorigin="anonymous"></script>
-  <script src="https://cdn.jsdelivr.net/npm/this.gui@4.2.1/dist/this.gui.umd.js" integrity="sha384-hMM5lKGHIJVSKMQgLKFJCTZNMwCQ7XHWcMHCiiTwDFzA0a2q4p0crD/NyA9Pg7wb" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/this.gui@4.3.0/dist/this.gui.umd.js" integrity="sha384-wZSWqOgarpDah0hINi5E+RSp2g3vUY0dacuRgUDextlT833ovzKYSzsBDCTMYSWV" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/this.me@4.2.1/dist/me.umd.js" integrity="sha384-ElnWCZOb324gqFJ2M/Fxy4CZ6Si131WIbR54iYomzEbTloUDLfBzZ05qi1nZ7+4G" crossorigin="anonymous"></script>
+  <script src="/.wallet/assets/providers/paypal/paypal-provider.js?v=1"></script>
+  <script src="/.wallet/assets/providers/paypal/paypal-me.js?v=3"></script>
+  <script src="/.wallet/assets/providers/paypal/paypal-gui.js?v=4"></script>
   <!-- Static page styles, off once .GUI has rendered (html.gui-on). -->
   <style>
     html:not(.gui-on) * { box-sizing: border-box; }
@@ -65,7 +69,7 @@
   </style>
 </head>
 <body>
-<div id="static-landing" data-layout="wallet-cards">
+<div id="static-landing" data-layout="wallet-paypal">
   <nav class="topnav" aria-label="me path">
     <a class="logo" href="https://neurons-me.github.io/" title="neurons.me"><img src="https://res.cloudinary.com/dkwnxf6gm/image/upload/v1760629064/neurons.me_b50f6a.png" alt="neurons.me" width="28" height="28" /></a>
     <div class="mepath"><a href="https://neurons-me.github.io/.me/" title=".me">me://</a><a href="/.wallet/" title=".wallet">.wallet</a><span class="here" aria-current="page">paypal</span></div>
@@ -76,17 +80,10 @@
   <main>
     <header>
       <h1>PayPal</h1>
-      <p class="lead">A provider for .wallet. Ask it to split, sum, divide or pay — .me computes the numbers.</p>
     </header>
-    <div class="cards">
-      <a class="card" href="/.wallet/paypal/split/"><div class="t">Split</div><div class="d">Split an expense among people. .me computes each share.</div></a>
-      <a class="card" href="/.wallet/paypal/split/"><div class="t">Sum</div><div class="d">Totals and nets, recomputed from what you entered.</div></a>
-      <a class="card" href="/.wallet/paypal/split/"><div class="t">Divide</div><div class="d">Shares and weights among who was in.</div></a>
-      <a class="card" href="/.wallet/paypal/split/"><div class="t">Pay</div><div class="d">Charge with PayPal and write the capture to .me.</div></a>
-    </div>
   </main>
 </div>
 <div id="root"></div>
-<script src="/.wallet/assets/wallet-gui.js?v=5" onerror="document.documentElement.classList.remove('gui-boot')"></script>
+<script src="/.wallet/assets/wallet-gui.js?v=10" onerror="document.documentElement.classList.remove('gui-boot')"></script>
 </body>
 </html>

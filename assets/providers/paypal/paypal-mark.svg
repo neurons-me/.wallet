@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 48 48" role="img" aria-label="PayPal">
+  <!-- Official PayPal monotone mark (paypal-ui logos). Paths unchanged; fills use currentColor so the mark follows the page theme. -->
+  <g clip-path="url(#paypal-mark-clip)">
+    <path fill="currentColor" fill-rule="evenodd" d="M38.168 13.352c-1.596-.842-3.535-1.346-5.644-1.346h-12.6l-4.218 26.92H6.413L12 3.032h15.05c5.065 0 9.056 2.827 10.518 6.755a9.643 9.643 0 0 1 .6 3.565Z" clip-rule="evenodd" opacity=".95"/>
+    <path fill="currentColor" d="M43.527 23.671A12.848 12.848 0 0 1 30.814 34.44h-5.188L23.459 47.9h-9.235l1.482-8.973 1.747-11.148.363-2.312h7.468c7.753 0 12.884-6.562 12.884-12.114l.005.002c3.817 1.964 6.038 5.944 5.354 10.317Z" opacity=".45"/>
+    <path fill="currentColor" d="M38.167 13.352c-1.596-.841-3.534-1.346-5.644-1.346H19.924l-2.11 13.46h7.47c7.752 0 12.883-6.562 12.883-12.114Z" opacity=".7"/>
+  </g>
+  <defs>
+    <clipPath id="paypal-mark-clip">
+      <path fill="currentColor" d="M6.15 3h37.5v45H6.15z"/>
+    </clipPath>
+  </defs>
+</svg>
