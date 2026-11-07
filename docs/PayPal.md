@@ -76,4 +76,4 @@ Tests (no credentials needed): `node --test tests/paypal/paypal.test.mjs` and `c
 
 ## Demos
 
-[Paypal .me](/.wallet/paypal/split/) was made for the PayPal AI hackathon. It is in development. It charges real PayPal **sandbox** orders when the local server runs.
+[.wallet/paypal](/.wallet/paypal/) was made for the PayPal AI hackathon. It is in development. It charges real PayPal **sandbox** orders when the local server runs.
