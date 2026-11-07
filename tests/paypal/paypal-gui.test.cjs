@@ -8,7 +8,7 @@ const PayPalMe = require('../../assets/providers/paypal/paypal-me.js');
 const WalletPayPal = require('../../assets/providers/paypal/paypal-provider.js');
 const map = require('../../assets/providers/paypal/paypal-me-map.json');
 const tick = () => new Promise((r) => setImmediate(r));
-function harness(client) {
+function harness(client, extraG) {
   let current;
   const React = {
     Fragment: 'Fragment',
@@ -29,7 +29,7 @@ function harness(client) {
       if (!before || !deps || deps.some((d, j) => d !== before[j])) { c.values[i] = deps; c.effects.push(fn); }
     },
   };
-  const G = { Atoms: { Box: 'Box', Button: 'Button' }, LLMS: 'LLMS', QRme: 'QRme' };
+  const G = { Atoms: { Box: 'Box', Button: 'Button' }, LLMS: 'LLMS', QRme: 'QRme', ...(extraG || {}) };
   const window = { Me, PayPalMe, WalletPayPal: { ...WalletPayPal, client: () => client } };
   vm.runInNewContext(fs.readFileSync(require.resolve('../../assets/providers/paypal/paypal-gui.js'), 'utf8'), { window, fetch: async () => ({ ok: true, json: async () => map }) });
   const Surface = window.WalletPayPalGUI(G, React);
@@ -65,6 +65,7 @@ test('offline GUI shows the mark, QRme, disabled Pay and LLMS — no café or en
   assert.ok(all(tree, (n) => n.type === 'QRme').length >= 1);
   const llms = all(tree, (n) => n.type === 'LLMS')[0];
   assert.ok(llms.props.parts.includes('phrase') && llms.props.parts.includes('syntax') && llms.props.parts.includes('graph') && llms.props.parts.includes('explain'));
+  assert.equal(llms.props.graphHeight, 320);
   assert.ok(Array.isArray(llms.props.ops) && llms.props.ops.length > 0);
   assert.ok(llms.props.phrase);
   assert.equal(graph(tree).nodes.find((n) => n.path === 'cafe.total'), undefined);
@@ -89,4 +90,21 @@ test('live GUI uses charge() after filling pay fields and writes mocked SSE capt
   assert.ok(graph(tree).nodes.some((n) => n.path.endsWith('.id') && n.value === 'GUIORDER'));
   onCapture({ ...request, orderId: 'GUIORDER', captureId: 'GUICAPTURE', status: 'COMPLETED' }); tree = app.render();
   assert.equal(graph(tree).nodes.find((n) => n.path === 'paid.payer').value, 700);
+});
+test('compound LLMS keeps syntax and graph at the same scrollable pane height', async () => {
+  const LLMS = Object.assign(function LLMS() {}, { Phrase: 'LLMSPhrase', Syntax: 'LLMSSyntax', Graph: 'LLMSGraph', Explain: 'LLMSExplain' });
+  const app = harness({ health: async () => { throw Error('off'); } }, { LLMS });
+  await app.init(); await tick(); const tree = app.render();
+  const root = all(tree, (n) => n.type === LLMS)[0];
+  assert.ok(root);
+  assert.equal(root.props.graphHeight, 320);
+  const syn = all(tree, (n) => n.props && n.props['data-gui-node-id'] === 'wallet.paypal.llms.syntax')[0];
+  const graphPane = all(tree, (n) => n.props && n.props['data-gui-node-id'] === 'wallet.paypal.llms.graph')[0];
+  assert.equal(syn.props.sx.height, 320);
+  assert.equal(syn.props.sx.minHeight, 320);
+  assert.equal(syn.props.sx.overflow, 'auto');
+  assert.equal(graphPane.props.sx.height, 320);
+  assert.equal(graphPane.props.sx.minHeight, 320);
+  assert.ok(all(syn, (n) => n.type === 'LLMSSyntax').length >= 1);
+  assert.ok(all(graphPane, (n) => n.type === 'LLMSGraph' && n.props.height === 320).length >= 1);
 });

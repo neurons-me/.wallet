@@ -90,7 +90,23 @@
   window.WalletPayPalGUI = function createPayPalGUI(G, React) {
     const h = React.createElement, { Box, Button } = G.Atoms;
     const mono = "ui-monospace, SFMono-Regular, Menlo, Consolas, monospace";
+    const paneH = 320;
     const panel = { border: 1, borderColor: "divider", borderRadius: "14px", p: { xs: 2, sm: 3 }, minWidth: 0, bgcolor: "background.paper" };
+    function llmsView(snap) {
+      const shared = { graph: snap.graph, explain: snap.explain, ops: snap.ops, phrase: phraseOf(snap), changed: snap.changed, graphHeight: paneH, graphMode: "interactive", explainOnSelect: true };
+      if (!G.LLMS) return h(Box, { component: "pre", sx: { overflow: "auto", fontFamily: mono, fontSize: 12 } }, JSON.stringify(snap.graph, null, 2));
+      if (G.LLMS.Phrase && G.LLMS.Syntax && G.LLMS.Graph) {
+        return h(G.LLMS, shared,
+          h(G.LLMS.Phrase),
+          h(Box, { sx: { display: "grid", gridTemplateColumns: { xs: "minmax(0,1fr)", md: "minmax(0,1fr) minmax(0,1fr)" }, gap: 1.5, mt: 1.25, alignItems: "stretch" } },
+            h(Box, { sx: { minWidth: 0, height: paneH, minHeight: paneH, maxHeight: paneH, overflow: "auto", overscrollBehavior: "contain" }, "data-gui-node-id": "wallet.paypal.llms.syntax" },
+              h(G.LLMS.Syntax)),
+            h(Box, { sx: { minWidth: 0, height: paneH, minHeight: paneH }, "data-gui-node-id": "wallet.paypal.llms.graph" },
+              h(G.LLMS.Graph, { height: paneH }))),
+          G.LLMS.Explain ? h(G.LLMS.Explain) : null);
+      }
+      return h(G.LLMS, { ...shared, parts: ["phrase", "syntax", "graph", "explain"] });
+    }
     const text = (s, sx) => h(Box, { component: "p", sx: { m: 0, color: "text.secondary", fontSize: 13, ...sx } }, s);
     const code = (s) => h(Box, { component: "code", sx: { fontFamily: mono, overflowWrap: "anywhere" } }, s);
     const btn = (label, props) => h(Button, { size: "small", variant: "outlined", sx: { textTransform: "none" }, ...props }, label);
@@ -259,8 +275,7 @@
                 text(msg.kind === "receipt" ? "receipt" : msg.kind)),
               text(msg.text || ""),
               msg.kind === "receipt" && h(ReceiptCard, { receipt: lookupReceipt(snap, msg.receiptId), notice }))))),
-        h(Box, { sx: panel },
-          G.LLMS ? h(G.LLMS, { graph: snap.graph, explain: snap.explain, ops: snap.ops, phrase: phraseOf(snap), changed: snap.changed, parts: ["phrase", "syntax", "graph", "explain"], graphHeight: 320, graphMode: "interactive", explainOnSelect: true }) : h(Box, { component: "pre", sx: { overflow: "auto", fontFamily: mono, fontSize: 12 } }, JSON.stringify(snap.graph, null, 2))));
+        h(Box, { sx: panel }, llmsView(snap)));
     }
     return Surface;
   };
