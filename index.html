@@ -12,22 +12,22 @@
   <meta property="og:description" content="this.wallet: Ethereum, PayPal and the coins on the way." />
   <meta property="og:url" content="https://neurons-me.github.io/.wallet/" />
   <meta property="og:type" content="website" />
-  <!-- .GUI (this.gui@4.2.1, which has G.QRme) renders this page from the static markup below (/.wallet/assets/wallet-gui.js, the same topbar as the neurons-me docs); the static page stays as the no-JS / CDN-failure fallback.
-       Same page-scoped theme keys as the docs (me-docs), neurons.me, dark by default, so the light / dark choice carries across them. -->
+  <!-- .GUI (this.gui@4.4.5) renders this page from the static markup below (/.wallet/assets/wallet-gui.js). The topbar is the Case 2 AppShell marks (Getting Started/Namespace · "2 · Namespace + site with .GUI": cleaker.me @ host, SiteBrand, QrBadge with hoverFlip). The static page stays as the no-JS / CDN-failure fallback.
+       Same page-scoped theme keys as the docs (me-docs). Theme id defaults to neurons.me; light / dark follows the system until the visitor picks one. -->
   <script>
-    window.__thisGuiThemeScope = { scopeId: "me-docs", themeModeKey: "me-docs.themeMode", themeIdKey: "me-docs.themeId", defaultMode: "dark" };
+    window.__thisGuiThemeScope = { scopeId: "me-docs", themeModeKey: "me-docs.themeMode", themeIdKey: "me-docs.themeId" };
     try {
-      if (!localStorage.getItem("me-docs.themeMode")) localStorage.setItem("me-docs.themeMode", "dark");
       if (!localStorage.getItem("me-docs.themeId")) localStorage.setItem("me-docs.themeId", "neurons.me");
     } catch (e) {}
     document.documentElement.classList.add("gui-boot");
   </script>
-  <!-- No icon font: every icon is inline SVG; hide any icon-font span so its name never shows as text. -->
-  <style>.material-symbols-rounded,.material-symbols-outlined,.material-icons{display:none!important} body{margin:0} .gui-boot #static-landing{display:none}</style>
-  <!-- Pinned dependencies (jsDelivr, exact versions, Subresource Integrity). -->
+  <!-- body reset + hide the static fallback once .GUI is booting. Material Symbols CSS is loaded above for ThemeModeToggle / Icon in the QR menu. -->
+  <style>body{margin:0} .gui-boot #static-landing{display:none}</style>
+  <!-- Pinned dependencies (jsDelivr, exact versions, Subresource Integrity). this.gui@4.4.5 is published on npm. -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/this.gui@4.4.5/dist/material-symbols.css" integrity="sha384-dvUfVVY6nb2ef6F+dRTsSozZpefoOvMox4Ay4fQP86bSU+6yHovoYYKaRtwS+mca" crossorigin="anonymous" />
   <script src="https://cdn.jsdelivr.net/npm/react@18.3.1/umd/react.production.min.js" integrity="sha384-DGyLxAyjq0f9SPpVevD6IgztCFlnMF6oW/XQGmfe+IsZ8TqEiDrcHkMLKI6fiB/Z" crossorigin="anonymous"></script>
   <script src="https://cdn.jsdelivr.net/npm/react-dom@18.3.1/umd/react-dom.production.min.js" integrity="sha384-gTGxhz21lVGYNMcdJOyq01Edg0jhn/c22nsx0kyqP0TxaV5WVdsSH1fSDUf5YJj1" crossorigin="anonymous"></script>
-  <script src="https://cdn.jsdelivr.net/npm/this.gui@4.2.1/dist/this.gui.umd.js" integrity="sha384-hMM5lKGHIJVSKMQgLKFJCTZNMwCQ7XHWcMHCiiTwDFzA0a2q4p0crD/NyA9Pg7wb" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/this.gui@4.4.5/dist/this.gui.umd.js" integrity="sha384-VHXWVjH6v0Gm95tlBwrpUMvDh+qemyoMyZO7qU+rhKP8uw4jaVAZ6e78JF9q5/BS" crossorigin="anonymous"></script>
   <!-- Static page styles, off once .GUI has rendered (html.gui-on). -->
   <style>
     html:not(.gui-on) * { box-sizing: border-box; }
@@ -88,6 +88,6 @@
   </main>
 </div>
 <div id="root"></div>
-<script src="/.wallet/assets/wallet-gui.js?v=5" onerror="document.documentElement.classList.remove('gui-boot')"></script>
+<script src="/.wallet/assets/wallet-gui.js?v=7" onerror="document.documentElement.classList.remove('gui-boot')"></script>
 </body>
 </html>

@@ -1,5 +1,6 @@
-// .GUI for .wallet pages: existing pages pin 4.2.1; the PayPal surface pins published 4.3.0 for GUI.LLMS.
-// Self-contained: the same topbar as the neurons-me docs (me:// path, search, Docs, GitHub, theme picker, light/dark, gear) plus Cleaker's compact QRme.
+// .GUI for .wallet pages: the landing (/.wallet/) pins published this.gui@4.4.5 and the Case 2 AppShell marks
+// (Getting Started/Namespace · "2 · Namespace + site with .GUI"); PayPal still pins 4.3.0; other pages may pin 4.2.1.
+// PayPal and the other pages keep the docs-style topbar (me:// path, search, Docs, GitHub, theme picker, light/dark, gear) plus Cleaker's compact QRme.
 // The page's own static markup (#static-landing) is the single source of text, links and images: this script reads it, renders the same content
 // through GUI.mount, then removes the static copy. Without JS or if the CDN fails, the static page stays as it is.
 (function () {
@@ -192,6 +193,107 @@
         page.docs && h(Link, { href: page.docs, underline: "hover", sx: { fontFamily: MONO, fontSize: 12, color: "text.secondary", mx: { xs: 1, sm: 0 } } }, "Docs"),
         page.github && h(Link, { href: page.github, underline: "none", target: "_blank", rel: "noopener", title: "GitHub · " + page.github.replace(/^https?:\/\/github\.com\//, ""), "aria-label": "GitHub", sx: { display: "inline-flex", lineHeight: 0, color: "text.secondary", "&:hover": { color: "text.primary" } } }, h(Ico, { kind: "github", size: 18 })),
         h(Box, { "data-gui-inspector-control": "true", sx: { display: "inline-flex", alignItems: "center", gap: .25 } }, h(ThemePicker), h(ModeToggle), h(SettingsMenu))));
+  }
+  // ── Case 2 (Getting Started/Namespace · "2 · Namespace + site with .GUI"): landing only.
+  //    The story (SiteWithGui) mounts AppShell with namespace "cleaker.me", brand "Neurons",
+  //    position `${namespace} @ ${host}`, identity QrBadge in the person's corner (default top-left),
+  //    identityUsername, and namespaceRoutes. AppShell ships on this.gui/runtime (ESM), not the UMD,
+  //    so this page composes the same shell from the UMD exports (SiteBrand, QrBadge, BarBrandCell,
+  //    placeMarks, marksInBars), the same way neurons-me.github.io/assets/index-gui.js does.
+  //    No left rail: the coins / providers body stays exactly as it is.
+  //    The story sets hoverFlip={false} because a click opens the QR menu; here hoverFlip stays on
+  //    (QRme's default, with Cleaker's avatarSrc) so the QR turns over, and the namespace "cleaker.me"
+  //    sits beside it as IdentityText. Click still opens the tools menu (theme, Docs, GitHub). ──
+  const CLEAKER_FACE = "https://res.cloudinary.com/dkwnxf6gm/image/upload/v1765054949/cleaker.me_gusn1q.png";
+  const APP_SURFACE_FALLBACK = "neurons-me.github.io";
+  function Case2IdentityText({ primary, title }) {
+    return h(Box, { title, "data-gui-node-id": "GUI.window.layout.marks.identity.text", "data-gui-component": "namespace",
+      sx: { display: "flex", flexDirection: "column", minWidth: 0, lineHeight: 1.15 } },
+      h(Box, { component: "span", sx: { fontWeight: 700, fontSize: "0.86rem", color: "text.primary", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" } }, primary));
+  }
+  function Case2WhereText({ where, title }) {
+    return h(Box, { component: "span", title, "data-gui-node-id": "GUI.window.layout.marks.brand.where",
+      sx: { fontFamily: MONO, fontSize: "0.8rem", fontWeight: 600, color: "text.secondary", whiteSpace: "nowrap" } }, where);
+  }
+  function Case2QrMenu({ onClose, menuRef }) {
+    const Paper = G.Paper || G.Atoms && G.Atoms.Paper, Typography = G.Typography || G.Atoms && G.Atoms.Typography, Icon = G.Icon, ThemeModeToggle = G.ThemeModeToggle;
+    return h(Paper || "div", {
+      ref: menuRef, elevation: 0, role: "dialog", "aria-label": "QR menu",
+      "data-gui-node-id": "GUI.window.layout.marks.identity.menu",
+      sx: { position: "fixed", top: 52, left: 8, right: "auto", zIndex: (th) => ((th.zIndex && th.zIndex.modal) || 1300) + 1, p: 1.25, width: 272, maxWidth: "calc(100vw - 16px)", display: "flex", flexDirection: "column", gap: 1.25, bgcolor: "background.default", backgroundImage: "none", border: "1px solid", borderColor: "divider", boxShadow: "none", borderRadius: "12px" },
+    }, [
+      h(Box, { sx: { display: "flex", alignItems: "center", justifyContent: "space-between", gap: 1, pr: 0.25 } }, [
+        h(Typography || "span", { variant: "caption", sx: { fontWeight: 600, fontSize: "0.85rem" } }, "Theme"),
+        ThemeModeToggle ? h(ThemeModeToggle, { variant: "switchMinimal", iconSize: "small", "aria-label": "Toggle light and dark" }) : h(ModeToggle),
+        h(Box, { component: "button", type: "button", "aria-label": "Close", title: "Close", onClick: onClose,
+          sx: { display: "flex", p: 0.5, ml: "auto", border: 0, borderRadius: 1, background: "transparent", color: "text.secondary", cursor: "pointer", "&:hover": { bgcolor: "action.hover", color: "text.primary" } } },
+          Icon ? h(Icon, { name: "close", fontSize: "1.25rem" }) : "×"),
+      ]),
+      page.docs && h(Link, { href: page.docs, underline: "none", color: "inherit", "aria-label": "Docs", title: "Docs",
+        "data-gui-node-id": "GUI.window.layout.marks.identity.menu.docs",
+        sx: { display: "flex", alignItems: "center", gap: 1, p: 0.75, px: 1, border: "1px solid", borderColor: "divider", borderRadius: 1, color: "inherit", textDecoration: "none", "&:hover": { bgcolor: "action.hover" } } },
+        h(Box, { component: "span", sx: { fontWeight: 600, fontSize: "0.875rem" } }, "Docs")),
+      page.github && h(Link, { href: page.github, underline: "none", color: "inherit", target: "_blank", rel: "noopener", title: "GitHub · " + page.github.replace(/^https?:\/\/github\.com\//, ""), "aria-label": "GitHub",
+        "data-gui-node-id": "GUI.window.layout.marks.identity.menu.github",
+        sx: { display: "flex", alignItems: "center", gap: 1, p: 0.75, px: 1, border: "1px solid", borderColor: "divider", borderRadius: 1, color: "inherit", textDecoration: "none", "&:hover": { bgcolor: "action.hover" } } },
+        h(Ico, { kind: "github", size: 18 }), h(Box, { component: "span", sx: { fontWeight: 600, fontSize: "0.875rem" } }, "GitHub")),
+    ].filter(Boolean));
+  }
+  function Case2TopBar(p) {
+    const SiteBrand = G.SiteBrand, QrBadge = G.QrBadge, BarBrandCell = G.BarBrandCell, FloatingMark = G.FloatingMark;
+    const placeMarks = G.placeMarks, marksInBars = G.marksInBars;
+    const [narrow, setNarrow] = React.useState(() => typeof matchMedia === "function" && matchMedia("(max-width: 599px)").matches);
+    const [qrMenuOpen, setQrMenuOpen] = React.useState(false);
+    const qrCellRef = React.useRef(null), menuRef = React.useRef(null);
+    React.useEffect(() => {
+      const mq = window.matchMedia("(max-width: 599px)");
+      const on = () => setNarrow(mq.matches);
+      if (mq.addEventListener) mq.addEventListener("change", on); else mq.addListener(on);
+      return () => { if (mq.removeEventListener) mq.removeEventListener("change", on); else mq.removeListener(on); };
+    }, []);
+    React.useEffect(() => {
+      if (!qrMenuOpen) return undefined;
+      const onPtr = (e) => { const t = e.target; if (qrCellRef.current && qrCellRef.current.contains(t)) return; if (menuRef.current && menuRef.current.contains(t)) return; setQrMenuOpen(false); };
+      const onKey = (e) => { if (e.key === "Escape") setQrMenuOpen(false); };
+      document.addEventListener("pointerdown", onPtr); document.addEventListener("keydown", onKey);
+      return () => { document.removeEventListener("pointerdown", onPtr); document.removeEventListener("keydown", onKey); };
+    }, [qrMenuOpen]);
+    const loc = typeof window !== "undefined" ? window.location : { host: APP_SURFACE_FALLBACK, protocol: "https:", origin: "https://" + APP_SURFACE_FALLBACK };
+    const surface = surfaceToken(loc) || APP_SURFACE_FALLBACK;
+    const position = CLEAKER_NAMESPACE + " @ " + surface;
+    const qrValue = "https://" + CLEAKER_NAMESPACE + "/?at=" + encodeURIComponent(loc.origin || ("https://" + APP_SURFACE_FALLBACK));
+    const brand = SiteBrand
+      ? h(SiteBrand, { label: "neurons.me", href: "https://neurons-me.github.io/", logo: LOGO, favicon: false })
+      : h(Link, { href: "https://neurons-me.github.io/", title: "neurons.me", underline: "none", sx: { display: "inline-flex", lineHeight: 0 } }, h("img", { src: LOGO, alt: "neurons.me", width: 28, height: 28, style: { display: "block", objectFit: "contain" } }));
+    const qr = QrBadge
+      ? h(QrBadge, { value: qrValue, status: "confirmed", clickFlip: false, hoverFlip: true, cursor: "pointer", avatarSrc: CLEAKER_FACE, avatarAlt: "cleaker" })
+      : h(G.QRme, { variant: "topbar", value: qrValue, status: "confirmed", clickFlip: false, hoverFlip: true, cursor: "pointer", avatarSrc: CLEAKER_FACE, avatarAlt: "cleaker" });
+    const identity = h(BarBrandCell || Box, {
+      ref: qrCellRef, component: "button", type: "button", title: "your .me", "aria-label": CLEAKER_NAMESPACE,
+      "aria-haspopup": "dialog", "aria-expanded": qrMenuOpen,
+      onClick: (e) => { if (e && e.preventDefault) e.preventDefault(); setQrMenuOpen((open) => !open); },
+      "data-gui-node-id": "GUI.window.layout.marks.identity",
+      sx: { width: 48, height: 48, minWidth: 48, flex: "none", p: 0, m: 0, border: 0, background: "none", color: "inherit", cursor: "pointer" },
+    }, qr);
+    const placement = typeof placeMarks === "function"
+      ? placeMarks({ identity: "top-left", bars: { top: true, left: false }, narrow, brand: true })
+      : { identity: "top.start", brand: "top.end" };
+    const marks = typeof marksInBars === "function"
+      ? marksInBars(placement, {
+          identity,
+          brand,
+          identityText: h(Case2IdentityText, { primary: CLEAKER_NAMESPACE, title: position }),
+          brandText: h(Case2WhereText, { where: "@" + surface, title: position }),
+        }, { topText: true })
+      : { topStart: [{ type: "action", props: { element: identity } }], topEnd: [{ type: "action", props: { element: brand } }], float: null };
+    const items = (list) => (list || []).map((it, i) => h(Box, { key: i, sx: { display: "inline-flex", alignItems: "center", minWidth: 0 } }, it && it.props && it.props.element));
+    return h(React.Fragment, null,
+      h(Box, { component: "nav", "aria-label": "site shell", "data-gui-node-id": p["data-gui-node-id"],
+        sx: { position: "sticky", top: 0, zIndex: 100, display: "flex", alignItems: "center", gap: 1, px: { xs: 0.5, sm: 1 }, minHeight: 48, bgcolor: "background.paper" } },
+        h(Box, { sx: { display: "inline-flex", alignItems: "center", gap: 0.5, minWidth: 0, pl: 1 } }, ...items(marks.topStart)),
+        h(Box, { sx: { ml: "auto", display: "inline-flex", alignItems: "center", gap: 0.5, minWidth: 0, flexShrink: 0 } }, ...items(marks.topEnd))),
+      marks.float && FloatingMark ? h(FloatingMark, { corner: marks.float.corner }, marks.float.element) : null,
+      qrMenuOpen ? h(Case2QrMenu, { onClose: () => setQrMenuOpen(false), menuRef }) : null);
   }
   // ── /.wallet/paypal/ hero: one entry, UI only (nothing is sent anywhere yet): the text area for "who paid what", a receipt-photo button
   //    (the browser's file picker; the chosen file only shows its name here) and a primary button that stays disabled while there is nothing to send. ──
@@ -419,7 +521,7 @@
     sx: { ...cardSx, display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center", p: "12px 12px 16px", ...(c.href ? {} : { opacity: .55, "&:hover": { borderColor: "divider" } }) } }, [
     media({ logo: true, src: c.src, alt: c.name }), title(c.name), c.tag && T(c.tag, { fontSize: ".72rem", letterSpacing: ".06em", textTransform: "uppercase", color: "text.secondary", lineHeight: 1.6, mt: .25 }, { component: "span" })].filter(Boolean));
   const walletLandingSpec = () => N("Box", { "data-gui-node-id": L, sx: { minHeight: "100vh", bgcolor: "background.default", color: "text.primary", lineHeight: 1.6 } }, [
-    N("LandingTopBar", { "data-gui-node-id": L + ".bars.top" }),
+    N("Case2TopBar", { "data-gui-node-id": L + ".bars.top" }),
     N("Box", { component: "main", "data-gui-node-id": LC, sx: { display: "flex", justifyContent: "center", px: { xs: 2, sm: 3 }, pt: { xs: 5, sm: 9 }, pb: 10 } }, [
       N("Box", { component: "section", "data-gui-node-id": HERO, sx: { width: "100%", maxWidth: 760 } }, [
         N("Typography", { component: "h1", "data-gui-node-id": HERO + ".title", sx: { fontSize: "clamp(2.2rem, 6vw, 3.4rem)", lineHeight: 1.05, letterSpacing: "-.03em", fontWeight: 800, m: 0, mb: 3.5 } }, [page.h1]),
@@ -465,14 +567,15 @@
   ]);
   const spec = page.paypal ? walletPayPalSpec() : page.split ? walletSplitSpec() : page.groups ? walletLandingSpec() : page.cards ? walletCardsSpec() : walletSpec();
 
-  // ── theme (page-scoped keys from window.__thisGuiThemeScope; neurons.me, dark by default) + mount ──
+  // ── theme (page-scoped keys from window.__thisGuiThemeScope; neurons.me; light / dark follows the system until the visitor picks one) + mount ──
   const scope = window.__thisGuiThemeScope || {};
-  let mode = "dark"; try { mode = params.get("mode") || localStorage.getItem(scope.themeModeKey) || "dark"; if (params.get("mode")) localStorage.setItem(scope.themeModeKey, mode); } catch (e) {}
+  const system = (typeof matchMedia === "function" && matchMedia("(prefers-color-scheme: dark)").matches) ? "dark" : "light";
+  let mode = system; try { mode = params.get("mode") || localStorage.getItem(scope.themeModeKey) || system; if (params.get("mode")) localStorage.setItem(scope.themeModeKey, mode); } catch (e) {}
   const PageTheme = ({ children }) => h(G.Theme, { initialThemeId: "neurons.me", initialMode: mode }, children);
   const INSPECTOR_ON = params.get("inspector") === "1";
   if (G.getInspectorEnabled() !== INSPECTOR_ON) G.setInspectorEnabled(INSPECTOR_ON);
   G.mount(spec, ROOT, {
-    gui: { ...G, Theme: PageTheme, registry: { ...(G.Registry || G.registry), LandingTopBar, WalletEntry, SplitApp, PlannedEntry, PayPalSurface } },
+    gui: { ...G, Theme: PageTheme, registry: { ...(G.Registry || G.registry), LandingTopBar, Case2TopBar, WalletEntry, SplitApp, PlannedEntry, PayPalSurface } },
     devtools: { enabled: true, inspector: INSPECTOR_ON, adminView: false, inspectorToggleVisible: false },
   });
   html.classList.add("gui-on");
