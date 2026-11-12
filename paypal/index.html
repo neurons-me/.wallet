@@ -22,22 +22,22 @@
   <meta name="twitter:description" content="PayPal as a provider for .wallet." />
   <meta name="twitter:image" content="https://neurons-me.github.io/.wallet/assets/og/paypal-og.png" />
   <meta name="twitter:image:alt" content="PayPal provider for .wallet" />
-  <!-- .GUI (this.gui@4.3.0, with G.QRme and GUI.LLMS) renders this page from the static markup below (/.wallet/assets/wallet-gui.js, the same topbar as the neurons-me docs); the static page stays as the no-JS / CDN-failure fallback.
-       Same page-scoped theme keys as the docs (me-docs), neurons.me, dark by default, so the light / dark choice carries across them. -->
+  <!-- .GUI (this.gui@4.4.5) renders this page from the static markup below (/.wallet/assets/wallet-gui.js). The topbar matches the /.wallet/ landing: SiteBrand + @host on the left, a pure QrBadge (hoverFlip, no "cleaker.me" label) on the right. The static page stays as the no-JS / CDN-failure fallback.
+       Same page-scoped theme keys as the docs (me-docs). Theme id defaults to neurons.me; light / dark follows the system until the visitor picks one. -->
   <script>
-    window.__thisGuiThemeScope = { scopeId: "me-docs", themeModeKey: "me-docs.themeMode", themeIdKey: "me-docs.themeId", defaultMode: "dark" };
+    window.__thisGuiThemeScope = { scopeId: "me-docs", themeModeKey: "me-docs.themeMode", themeIdKey: "me-docs.themeId" };
     try {
-      if (!localStorage.getItem("me-docs.themeMode")) localStorage.setItem("me-docs.themeMode", "dark");
       if (!localStorage.getItem("me-docs.themeId")) localStorage.setItem("me-docs.themeId", "neurons.me");
     } catch (e) {}
     document.documentElement.classList.add("gui-boot");
   </script>
-  <!-- No icon font: every icon is inline SVG; hide any icon-font span so its name never shows as text. -->
-  <style>.material-symbols-rounded,.material-symbols-outlined,.material-icons{display:none!important} body{margin:0} .gui-boot #static-landing{display:none}</style>
-  <!-- Pinned dependencies (jsDelivr, exact versions, Subresource Integrity). -->
+  <!-- body reset + hide the static fallback once .GUI is booting. Material Symbols CSS is loaded above for ThemeModeToggle / Icon in the QR menu. -->
+  <style>body{margin:0} .gui-boot #static-landing{display:none}</style>
+  <!-- Pinned dependencies (jsDelivr, exact versions, Subresource Integrity). this.gui@4.4.5 is published on npm. -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/this.gui@4.4.5/dist/material-symbols.css" integrity="sha384-dvUfVVY6nb2ef6F+dRTsSozZpefoOvMox4Ay4fQP86bSU+6yHovoYYKaRtwS+mca" crossorigin="anonymous" />
   <script src="https://cdn.jsdelivr.net/npm/react@18.3.1/umd/react.production.min.js" integrity="sha384-DGyLxAyjq0f9SPpVevD6IgztCFlnMF6oW/XQGmfe+IsZ8TqEiDrcHkMLKI6fiB/Z" crossorigin="anonymous"></script>
   <script src="https://cdn.jsdelivr.net/npm/react-dom@18.3.1/umd/react-dom.production.min.js" integrity="sha384-gTGxhz21lVGYNMcdJOyq01Edg0jhn/c22nsx0kyqP0TxaV5WVdsSH1fSDUf5YJj1" crossorigin="anonymous"></script>
-  <script src="https://cdn.jsdelivr.net/npm/this.gui@4.3.0/dist/this.gui.umd.js" integrity="sha384-wZSWqOgarpDah0hINi5E+RSp2g3vUY0dacuRgUDextlT833ovzKYSzsBDCTMYSWV" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/this.gui@4.4.5/dist/this.gui.umd.js" integrity="sha384-VHXWVjH6v0Gm95tlBwrpUMvDh+qemyoMyZO7qU+rhKP8uw4jaVAZ6e78JF9q5/BS" crossorigin="anonymous"></script>
   <script src="https://cdn.jsdelivr.net/npm/this.me@4.2.1/dist/me.umd.js" integrity="sha384-ElnWCZOb324gqFJ2M/Fxy4CZ6Si131WIbR54iYomzEbTloUDLfBzZ05qi1nZ7+4G" crossorigin="anonymous"></script>
   <script src="/.wallet/assets/providers/paypal/paypal-provider.js?v=1"></script>
   <script src="/.wallet/assets/providers/paypal/paypal-me.js?v=3"></script>
@@ -74,6 +74,7 @@
     <a class="logo" href="https://neurons-me.github.io/" title="neurons.me"><img src="https://res.cloudinary.com/dkwnxf6gm/image/upload/v1760629064/neurons.me_b50f6a.png" alt="neurons.me" width="28" height="28" /></a>
     <div class="mepath"><a href="https://neurons-me.github.io/.me/" title=".me">me://</a><a href="/.wallet/" title=".wallet">.wallet</a><span class="here" aria-current="page">paypal</span></div>
     <span class="spacer"></span>
+    <a class="act" data-topbar="docs" href="/.wallet/docs/">Docs</a>
     <a class="gh" href="https://github.com/neurons-me/.wallet">GitHub</a>
   </nav>
   <main>
@@ -83,6 +84,6 @@
   </main>
 </div>
 <div id="root"></div>
-<script src="/.wallet/assets/wallet-gui.js?v=10" onerror="document.documentElement.classList.remove('gui-boot')"></script>
+<script src="/.wallet/assets/wallet-gui.js?v=11" onerror="document.documentElement.classList.remove('gui-boot')"></script>
 </body>
 </html>

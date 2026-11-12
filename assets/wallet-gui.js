@@ -1,6 +1,6 @@
-// .GUI for .wallet pages: the landing (/.wallet/) pins published this.gui@4.4.5 and the Case 2 AppShell marks
-// (Getting Started/Namespace · "2 · Namespace + site with .GUI"); PayPal still pins 4.3.0; other pages may pin 4.2.1.
-// PayPal and the other pages keep the docs-style topbar (me:// path, search, Docs, GitHub, theme picker, light/dark, gear) plus Cleaker's compact QRme.
+// .GUI for .wallet pages: the landing (/.wallet/) and /.wallet/paypal/ pin published this.gui@4.4.5 and the Case 2 AppShell marks
+// (Getting Started/Namespace · "2 · Namespace + site with .GUI"): SiteBrand + @host on the left, a pure QrBadge on the right.
+// Other pages may still pin 4.3.0 / 4.2.1 and keep the docs-style LandingTopBar (me:// path, search, Docs, GitHub, theme, gear) plus Cleaker's compact QRme.
 // The page's own static markup (#static-landing) is the single source of text, links and images: this script reads it, renders the same content
 // through GUI.mount, then removes the static copy. Without JS or if the CDN fails, the static page stays as it is.
 (function () {
@@ -554,7 +554,7 @@
   ]);
   const PayPalSurface = page.paypal && window.WalletPayPalGUI ? window.WalletPayPalGUI(G, React) : () => h("p", null, "PayPal surface did not load. Reload to try again.");
   const walletPayPalSpec = () => N("Box", { sx: { minHeight: "100vh", bgcolor: "background.default", color: "text.primary", lineHeight: 1.6 } }, [
-    N("LandingTopBar", { "data-gui-node-id": L + ".bars.top" }),
+    N("Case2TopBar", { "data-gui-node-id": L + ".bars.top" }),
     N("Box", { component: "main", sx: { maxWidth: 1280, mx: "auto", px: { xs: 2, sm: 3 }, pt: { xs: 4, sm: 6 }, pb: 10 } }, [
       N("PayPalSurface", { "data-gui-node-id": LC + ".paypal" }),
     ]),
