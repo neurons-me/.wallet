@@ -194,16 +194,11 @@
         page.github && h(Link, { href: page.github, underline: "none", target: "_blank", rel: "noopener", title: "GitHub · " + page.github.replace(/^https?:\/\/github\.com\//, ""), "aria-label": "GitHub", sx: { display: "inline-flex", lineHeight: 0, color: "text.secondary", "&:hover": { color: "text.primary" } } }, h(Ico, { kind: "github", size: 18 })),
         h(Box, { "data-gui-inspector-control": "true", sx: { display: "inline-flex", alignItems: "center", gap: .25 } }, h(ThemePicker), h(ModeToggle), h(SettingsMenu))));
   }
-  // ── Case 2 (Getting Started/Namespace · "2 · Namespace + site with .GUI"): landing only.
-  //    The story (SiteWithGui) mounts AppShell with namespace "cleaker.me", brand "Neurons",
-  //    position `${namespace} @ ${host}`, identity QrBadge in the person's corner (default top-left),
-  //    identityUsername, and namespaceRoutes. AppShell ships on this.gui/runtime (ESM), not the UMD,
-  //    so this page composes the same shell from the UMD exports (SiteBrand, QrBadge, BarBrandCell,
-  //    placeMarks, marksInBars), the same way neurons-me.github.io/assets/index-gui.js does.
-  //    No left rail: the coins / providers body stays exactly as it is.
-  //    The story sets hoverFlip={false} because a click opens the QR menu; here hoverFlip stays on
-  //    (QRme's default, with Cleaker's avatarSrc) so the QR turns over, and the namespace "cleaker.me"
-  //    sits beside it as IdentityText. Click still opens the tools menu (theme, Docs, GitHub). ──
+  // ── Case 2 shell, placed like the live neurons-me.github.io index (assets/index-gui.js):
+  //    SiteBrand + @host on the left, a pure identity QR on the right (no "cleaker.me" label;
+  //    the name stays on title/aria). hoverFlip stays on with Cleaker's avatarSrc so the QR
+  //    turns over. Click still opens the tools menu (theme, Docs, GitHub). No left rail:
+  //    the coins / providers body stays exactly as it is. ──
   const CLEAKER_FACE = "https://res.cloudinary.com/dkwnxf6gm/image/upload/v1765054949/cleaker.me_gusn1q.png";
   const APP_SURFACE_FALLBACK = "neurons-me.github.io";
   function Case2IdentityText({ primary, title }) {
@@ -220,7 +215,7 @@
     return h(Paper || "div", {
       ref: menuRef, elevation: 0, role: "dialog", "aria-label": "QR menu",
       "data-gui-node-id": "GUI.window.layout.marks.identity.menu",
-      sx: { position: "fixed", top: 52, left: 8, right: "auto", zIndex: (th) => ((th.zIndex && th.zIndex.modal) || 1300) + 1, p: 1.25, width: 272, maxWidth: "calc(100vw - 16px)", display: "flex", flexDirection: "column", gap: 1.25, bgcolor: "background.default", backgroundImage: "none", border: "1px solid", borderColor: "divider", boxShadow: "none", borderRadius: "12px" },
+      sx: { position: "fixed", top: 52, right: 0, left: "auto", zIndex: (th) => ((th.zIndex && th.zIndex.modal) || 1300) + 1, p: 1.25, width: 272, maxWidth: "calc(100vw - 16px)", display: "flex", flexDirection: "column", gap: 1.25, bgcolor: "background.default", backgroundImage: "none", border: "1px solid", borderColor: "divider", boxShadow: "none", borderRadius: "12px" },
     }, [
       h(Box, { sx: { display: "flex", alignItems: "center", justifyContent: "space-between", gap: 1, pr: 0.25 } }, [
         h(Typography || "span", { variant: "caption", sx: { fontWeight: 600, fontSize: "0.85rem" } }, "Theme"),
@@ -276,16 +271,15 @@
       sx: { width: 48, height: 48, minWidth: 48, flex: "none", p: 0, m: 0, border: 0, background: "none", color: "inherit", cursor: "pointer" },
     }, qr);
     const placement = typeof placeMarks === "function"
-      ? placeMarks({ identity: "top-left", bars: { top: true, left: false }, narrow, brand: true })
-      : { identity: "top.start", brand: "top.end" };
+      ? placeMarks({ identity: "top-right", bars: { top: true, left: false }, narrow, brand: true })
+      : { identity: "top.end", brand: "top.start" };
     const marks = typeof marksInBars === "function"
       ? marksInBars(placement, {
           identity,
           brand,
-          identityText: h(Case2IdentityText, { primary: CLEAKER_NAMESPACE, title: position }),
           brandText: h(Case2WhereText, { where: "@" + surface, title: position }),
         }, { topText: true })
-      : { topStart: [{ type: "action", props: { element: identity } }], topEnd: [{ type: "action", props: { element: brand } }], float: null };
+      : { topStart: [{ type: "action", props: { element: brand } }], topEnd: [{ type: "action", props: { element: identity } }], float: null };
     const items = (list) => (list || []).map((it, i) => h(Box, { key: i, sx: { display: "inline-flex", alignItems: "center", minWidth: 0 } }, it && it.props && it.props.element));
     return h(React.Fragment, null,
       h(Box, { component: "nav", "aria-label": "site shell", "data-gui-node-id": p["data-gui-node-id"],
